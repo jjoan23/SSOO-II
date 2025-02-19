@@ -6,7 +6,8 @@
 static int descriptor = 0;
 
 int bmount(const char *camino){
-
+        
+umask(0000);
 descriptor = open(camino,O_RDWR | O_CREAT,0666); 
 
 if(descriptor ==-1){
@@ -44,6 +45,14 @@ ssize_t bytes_escritos = write(descriptor, buf, BLOCKSIZE);
 
 }
 
-int bread(unsigned int nbloque, void *buf){
-
+int bread(unsigned int nbloque, void *buf) {
+    off_t desplazamiento = nbloque * BLOCKSIZE;
+    if (lseek(descriptor, desplazamiento, SEEK_SET) == -1) {
+        return FALLO; // Error lseek
+    }
+    size_t nbytes = read(descriptor, buf, BLOCKSIZE);
+    if (nbytes == -1) {
+        return FALLO; // Error read
+    }
+    return nbytes;
 }
