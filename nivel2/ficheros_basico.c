@@ -35,7 +35,64 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
     return 0;
 }
 int initMB() {
- return EXITO;
+    unsigned char bufferMB[BLOCKSIZE];
+    memset(bufferMB, 0, BLOCKSIZE); // Inicializamos el buffer a 0
+    
+    // Cargar superbloque para obtener la cantidad de bloques y los metadatos
+    struct superbloque SB;
+    if (bread(0, &SB) == FALLO)
+    {
+        perror("Error leyendo el superbloque");
+        return FALLO;
+    }
+    
+    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 1;
+    int bitsMetadatos = tamMetadatos;
+    int bytesMetadatos = bitsMetadatos / 8;
+    int restoBits = bitsMetadatos % 8;
+    
+    // Inicializamos bloques completos del MB si ocupa más de un bloque
+    int bloquesCompletos = bytesMetadatos / BLOCKSIZE;
+    
+    for (int i = 0; i < bloquesCompletos; i++)
+    {
+        memset(bufferMB, 255, BLOCKSIZE);
+        if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO)
+        {
+            perror("Error escribiendo bloque completo del MB");
+            return FALLO;
+        }
+    }
+    
+    // Último bloque parcial si hay bytes sobrantes
+    memset(bufferMB, 0, BLOCKSIZE);
+    
+    for (int i = 0; i < (bytesMetadatos % BLOCKSIZE); i++)
+    {
+        bufferMB[i] = 255;
+    }
+    
+    if (restoBits > 0)
+    {
+        bufferMB[bytesMetadatos % BLOCKSIZE] = (uint8_t)(255 << (8 - restoBits));
+    }
+    
+    if (bwrite(SB.posPrimerBloqueMB + bloquesCompletos, bufferMB) == FALLO)
+    {
+        perror("Error escribiendo el último bloque parcial del MB");
+        return FALLO;
+    }
+    
+    // Actualizar el superbloque con los bloques libres restantes
+    SB.cantBloquesLibres -= tamMetadatos;
+    
+    if (bwrite(0, &SB) == FALLO)
+    {
+        perror("Error actualizando el superbloque");
+        return FALLO;
+    }
+    
+    return EXITO;
 }
 int initAI() {
     struct superbloque SB;

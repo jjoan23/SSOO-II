@@ -1,23 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "bloques.h"
 #include "ficheros_basico.h"
 
-int leer_sf(const char *nombre_dispositivo) {
-    // Abrir el dispositivo virtual
-    if (bmount(nombre_dispositivo) == -1) {
-        printf("Error al montar el dispositivo virtual\n");
-        return -1;
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Uso: %s <nombre_dispositivo>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // Montar el dispositivo
+    if (bmount(argv[1]) == -1) {
+        perror("Error montando el dispositivo");
+        return EXIT_FAILURE;
     }
 
     // Leer el superbloque
     struct superbloque SB;
-    if (bread(posSB, &SB) == -1) {
-        printf("Error al leer el superbloque\n");
-        return -1;
+    if (bread(0, &SB) == -1) {
+        perror("Error leyendo el superbloque");
+        bumount();
+        return EXIT_FAILURE;
     }
 
-    // Mostrar la información del superbloque
+    // Mostrar los datos del superbloque
     printf("DATOS DEL SUPERBLOQUE\n");
     printf("posPrimerBloqueMB = %u\n", SB.posPrimerBloqueMB);
     printf("posUltimoBloqueMB = %u\n", SB.posUltimoBloqueMB);
@@ -31,31 +37,29 @@ int leer_sf(const char *nombre_dispositivo) {
     printf("cantInodosLibres = %u\n", SB.cantInodosLibres);
     printf("totBloques = %u\n", SB.totBloques);
     printf("totInodos = %u\n", SB.totInodos);
-
-    // Mostrar el tamaño del struct inodo
+    
+    // Mostrar el tamaño de las estructuras
+    printf("\nsizeof struct superbloque: %lu\n", sizeof(struct superbloque));
     printf("sizeof struct inodo: %lu\n", sizeof(struct inodo));
 
-    // Recorrer la lista enlazada de inodos libres
-    printf("RECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
-    unsigned int contInodos = SB.posPrimerInodoLibre + 1;
-    for (unsigned int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
-        struct inodo inodos[BLOCKSIZE / INODOSIZE];
-        if (bread(i, inodos) == -1) {
-            printf("Error al leer el bloque de inodos\n");
-            return -1;
-        }
-        for (unsigned int j = 0; j < BLOCKSIZE / INODOSIZE; j++) {
-            printf("%u ", inodos[j].punterosDirectos[0]);
-            contInodos++;
-        }
-    }
-    printf("\n");
+    // Recorrer la lista de inodos libres
+    printf("\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n");
+    struct inodo inodos[BLOCKSIZE / INODOSIZE];
+    unsigned int posInodo = SB.posPrimerInodoLibre;
 
-    // Desmontar el dispositivo virtual
-    if (bumount() == -1) {
-        printf("Error al desmontar el dispositivo virtual\n");
-        return -1;
+    while (posInodo != UINT_MAX) {
+        unsigned int bloqueAI = SB.posPrimerBloqueAI + (posInodo / (BLOCKSIZE / INODOSIZE));
+        if (bread(bloqueAI, inodos) == -1) {
+            perror("Error leyendo bloque de inodos");
+            bumount();
+            return EXIT_FAILURE;
+        }
+        printf("%u ", posInodo);
+        posInodo = inodos[posInodo % (BLOCKSIZE / INODOSIZE)].punterosDirectos[0];
     }
+    printf("-1\n");
 
-    return 0;
+    // Desmontar el dispositivo
+    bumount();
+    return EXIT_SUCCESS;
 }
