@@ -1,7 +1,5 @@
 #include "bloques.h"
 
-//hs
-
 
 static int descriptor = 0;
 
