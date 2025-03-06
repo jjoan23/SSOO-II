@@ -130,10 +130,63 @@ int initAI() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-int escribir_bit(unsigned int nbloque, unsigned int bit);
+int escribir_bit(unsigned int nbloque, unsigned int bit) {
+    struct superbloque SB;
+    if (bread(0, &SB) == -1) {
+        perror("Error leyendo el superbloque");
+        return FALLO;
+    }
+    
+    unsigned int posbyte = nbloque / 8;
+    unsigned int posbit = nbloque % 8;
+    unsigned int nbloqueMB = posbyte / BLOCKSIZE;
+    unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
+    
+    unsigned char bufferMB[BLOCKSIZE];
+    if (bread(nbloqueabs, bufferMB) == -1) {
+        perror("Error leyendo el mapa de bits");
+        return FALLO;
+    }
+    
+    posbyte %= BLOCKSIZE;
+    unsigned char mascara = 128 >> posbit;
+    
+    if (bit == 1) {
+        bufferMB[posbyte] |= mascara;
+    } else {
+        bufferMB[posbyte] &= ~mascara;
+    }
+    
+    if (bwrite(nbloqueabs, bufferMB) == -1) {
+        perror("Error escribiendo en el mapa de bits");
+        return FALLO;
+    }
+    
+    return EXITO;
+}
 
-char leer_bit(unsigned int nbloque){
-
+char leer_bit(unsigned int nbloque) {
+    struct superbloque SB;
+    if (bread(0, &SB) == -1) {
+        perror("Error leyendo el superbloque");
+        return FALLO;
+    }
+    
+    unsigned int posbyte = nbloque / 8;
+    unsigned int posbit = nbloque % 8;
+    unsigned int nbloqueMB = posbyte / BLOCKSIZE;
+    unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
+    
+    unsigned char bufferMB[BLOCKSIZE];
+    if (bread(nbloqueabs, bufferMB) == -1) {
+        perror("Error leyendo el mapa de bits");
+        return FALLO;
+    }
+    
+    posbyte %= BLOCKSIZE;
+    unsigned char mascara = 128 >> posbit;
+    
+    return (bufferMB[posbyte] & mascara) ? 1 : 0;
 }
 
 int reservar_bloque() {
