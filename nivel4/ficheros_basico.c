@@ -393,3 +393,103 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
 
     return posInodoReservado;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////  NIVELL 4  //////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr) {
+    if (nblogico < DIRECTOS) {
+        *ptr = inodo->punterosDirectos[nblogico];
+        return 0;
+    } else if (nblogico < INDIRECTOS0) {
+        *ptr = inodo->punterosIndirectos[0];
+        return 1;
+    } else if (nblogico < INDIRECTOS1) {
+        *ptr = inodo->punterosIndirectos[1];
+        return 2;
+    } else if (nblogico < INDIRECTOS2) {
+        *ptr = inodo->punterosIndirectos[2];
+        return 3;
+    } else {
+        *ptr = 0;
+        fprintf(stderr, "Error: Bloque lógico fuera de rango\n");
+        return FALLO;
+    }
+}
+
+
+int obtener_indice(unsigned int nblogico, int nivel_punteros) {
+    if (nblogico < DIRECTOS) {
+        return nblogico;
+    } else if (nblogico < INDIRECTOS0) {
+        return nblogico - DIRECTOS;
+    } else if (nblogico < INDIRECTOS1) {
+        if (nivel_punteros == 2) {
+            return (nblogico - INDIRECTOS0) / NPUNTEROS;
+        } else if (nivel_punteros == 1) {
+            return (nblogico - INDIRECTOS0) % NPUNTEROS;
+        }
+    } else if (nblogico < INDIRECTOS2) {
+        if (nivel_punteros == 3) {
+            return (nblogico - INDIRECTOS1) / (NPUNTEROS * NPUNTEROS);
+        } else if (nivel_punteros == 2) {
+            return ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
+        } else if (nivel_punteros == 1) {
+            return ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
+        }
+    }
+    return FALLO;
+}
+
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned char reservar) {
+    unsigned int ptr = 0, ptr_ant = 0, salvar_inodo = 0;
+    int nRangoBL, nivel_punteros, indice;
+    unsigned int buffer[NPUNTEROS];
+    struct inodo inodo;
+
+    leer_inodo(ninodo, &inodo);
+    nRangoBL = obtener_nRangoBL(&inodo, nblogico, &ptr);
+    nivel_punteros = nRangoBL;
+
+    while (nivel_punteros > 0) {
+        if (ptr == 0) {
+            if (reservar == 0) return -1;
+            ptr = reservar_bloque();
+            inodo.numBloquesOcupados++;
+            inodo.ctime = time(NULL);
+            salvar_inodo = 1;
+            if (nivel_punteros == nRangoBL) {
+                inodo.punterosIndirectos[nRangoBL - 1] = ptr;
+            } else {
+                buffer[indice] = ptr;
+                bwrite(ptr_ant, buffer);
+            }
+            memset(buffer, 0, BLOCKSIZE);
+        } else {
+            bread(ptr, buffer);
+        }
+        indice = obtener_indice(nblogico, nivel_punteros);
+        ptr_ant = ptr;
+        ptr = buffer[indice];
+        nivel_punteros--;
+    }
+
+    if (ptr == 0) {
+        if (reservar == 0) return -1;
+        ptr = reservar_bloque();
+        inodo.numBloquesOcupados++;
+        inodo.ctime = time(NULL);
+        salvar_inodo = 1;
+        if (nRangoBL == 0) {
+            inodo.punterosDirectos[nblogico] = ptr;
+        } else {
+            buffer[indice] = ptr;
+            bwrite(ptr_ant, buffer);
+        }
+    }
+
+    if (salvar_inodo) escribir_inodo(ninodo, &inodo);
+    return ptr;
+}
