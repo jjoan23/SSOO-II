@@ -76,9 +76,7 @@ int initMB() {
         return FALLO;
     }
 
-    // Debug: Verificar que el bit 3138 se marca correctamente
-    printf("Marcando bloque %d en MB\n", 3138);
-    escribir_bit(3138, 1); // Asegurar que se marque explícitamente
+    
 
     // Actualizar superbloque
     SB.cantBloquesLibres -= tamMetadatos;

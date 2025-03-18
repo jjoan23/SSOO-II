@@ -36,22 +36,21 @@ int main(int argc, char *argv[]) {
     printf("totBloques = %u\n", SB.totBloques);
     printf("totInodos = %u\n", SB.totInodos);
     
-    printf("\nRESERVAMOS UN BLOQUE Y LUEGO LO LIBERAMOS\n");
-    int bloque = reservar_bloque();
-    printf("Se ha reservado el bloque físico nº %d que era el 1º libre indicado por el MB\n", bloque);
-    printf("SB.cantBloquesLibres = %u\n", --SB.cantBloquesLibres);
-    liberar_bloque(bloque);
-    printf("Liberamos ese bloque y después SB.cantBloquesLibres = %u\n", ++SB.cantBloquesLibres);
-    
-    printf("\nMAPA DE BITS CON BLOQUES DE METADATOS OCUPADOS\n");
-    unsigned int posiciones[] = {0, SB.posPrimerBloqueMB, SB.posUltimoBloqueMB, SB.posPrimerBloqueAI, SB.posUltimoBloqueAI, SB.posPrimerBloqueDatos, SB.posUltimoBloqueDatos};
-    for (int i = 0; i < 7; i++) {
-        int bit = leer_bit(posiciones[i]);
-        printf("SB.pos %u → leer_bit(%u) = %d\n", posiciones[i], posiciones[i], bit);
+    printf("\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30004, 400004 y 468750\n");
+    unsigned int bloques[] = {8, 204, 30004, 400004, 468750};
+    int bf;
+    for (int i = 0; i < 5; i++) {
+        bf = traducir_bloque_inodo(1, bloques[i], 1);
+        printf("[traducir_bloque_inodo() -> BL %u -> BF %d]\n", bloques[i], bf);
     }
     
     struct inodo inodo;
-    leer_inodo(0, &inodo);
+    if (leer_inodo(1, &inodo) == -1) {
+        perror("Error leyendo el inodo 1");
+        bumount();
+        return EXIT_FAILURE;
+    }
+    
     struct tm *ts;
     char atime[80], mtime[80], ctime[80], btime[80];
     ts = localtime(&inodo.atime);
@@ -62,7 +61,8 @@ int main(int argc, char *argv[]) {
     strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
     ts = localtime(&inodo.btime);
     strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
-    printf("\nDATOS DEL DIRECTORIO RAIZ\n");
+    
+    printf("\nDATOS DEL INODO RESERVADO 1\n");
     printf("tipo: %c\n", inodo.tipo);
     printf("permisos: %u\n", inodo.permisos);
     printf("atime: %s\n", atime);
@@ -72,6 +72,8 @@ int main(int argc, char *argv[]) {
     printf("nlinks: %u\n", inodo.nlinks);
     printf("tamEnBytesLog: %u\n", inodo.tamEnBytesLog);
     printf("numBloquesOcupados: %u\n", inodo.numBloquesOcupados);
+    
+    printf("\nSB.posPrimerInodoLibre = %u\n", SB.posPrimerInodoLibre + 1);
     
     bumount();
     return EXIT_SUCCESS;
