@@ -41,18 +41,20 @@ int main(int argc, char *argv[]) {
     int bf;
     for (int i = 0; i < 5; i++) {
         bf = traducir_bloque_inodo(1, bloques[i], 1);
-        printf("[traducir_bloque_inodo() -> BL %u -> BF %d]\n", bloques[i], bf);
+        printf("[traducir_bloque_inodo() -> inodo.punterosDirectos[%u] = %u (reservado BF %u para BL %u) \n", bloques[i], bf, bf,bloques[i]);
+        
     }
-    
-    struct inodo inodo;
-    if (leer_inodo(1, &inodo) == -1) {
-        perror("Error leyendo el inodo 1");
-        bumount();
-        return EXIT_FAILURE;
-    }
+
     
     struct tm *ts;
-    char atime[80], mtime[80], ctime[80], btime[80];
+    char atime[80];
+    char mtime[80];
+    char ctime[80];
+    char btime[80];
+    struct inodo inodo;
+    
+    leer_inodo(reservar_inodo('f',6), &inodo);
+    
     ts = localtime(&inodo.atime);
     strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
     ts = localtime(&inodo.mtime);
