@@ -65,10 +65,13 @@ int main(int argc, char *argv[]) {
     printf("\nDATOS DEL DIRECTORIO RAIZ\n");
     printf("tipo: %c\n", inodo.tipo);
     printf("permisos: %u\n", inodo.permisos);
+
+    
     printf("atime: %s\n", atime);
     printf("mtime: %s\n", mtime);
     printf("ctime: %s\n", ctime);
     printf("btime: %s\n", btime);
+    
     printf("nlinks: %u\n", inodo.nlinks);
     printf("tamEnBytesLog: %u\n", inodo.tamEnBytesLog);
     printf("numBloquesOcupados: %u\n", inodo.numBloquesOcupados);

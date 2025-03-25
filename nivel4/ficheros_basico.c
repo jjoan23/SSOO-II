@@ -362,7 +362,9 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
         perror("Error leyendo el inodo");
         return FALLO;
     }
-
+    
+    // Actualizar el superbloque para que apunte al siguiente inodo libre
+    SB.posPrimerInodoLibre = inodo.punterosDirectos[0];
 
     // Inicializar el inodo reservado
     inodo.tipo = tipo;

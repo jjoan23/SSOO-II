@@ -28,7 +28,8 @@ int main(int argc, char **argv) {
     initAI();
 
     // Crear el directorio raíz
-    if (reservar_inodo('d', 7) == -1) {
+    //CREC QUE ES RESERVAR INODO ('f', 6) I NO RESERVAR INODO ('d', 7) esta malament mirar nivel 3 tipo crec que s'error es a un aaltra banda pero aixo ho arregla
+    if (reservar_inodo('f', 6) == -1) { // Cambiar 'd' a 'f' y 7 a 6
         fprintf(stderr, "Error al reservar el inodo para el directorio raíz\n");
         bumount();
         return -1;
