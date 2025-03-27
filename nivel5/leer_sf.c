@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include "bloques.h"
-#include "ficheros_basico.h"
 #include "ficheros.h"
 
 int main(int argc, char *argv[]) {
