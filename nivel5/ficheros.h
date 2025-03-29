@@ -1,4 +1,7 @@
 #include "ficheros_basico.h" // Para funciones de bajo nivel (lectura/escritura de inodos)
+#include <stdint.h>
+#include <time.h>
+#include <limits.h>
 
 
 
