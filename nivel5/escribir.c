@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
             }
             printf("Inodo reservado: %d\n", ninodo);
         }
-
         // Escribir el texto en el offset correspondiente
         int escritos = mi_write_f(ninodo, texto, offsets[i], tam_texto);
         if (escritos < 0) {

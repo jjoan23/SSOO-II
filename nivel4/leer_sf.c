@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
     int bf;
     for (int i = 0; i < 5; i++) {
         bf = traducir_bloque_inodo(1, bloques[i], 1);
-        printf("[traducir_bloque_inodo() -> inodo.punterosDirectos[%u] = %d (reservado BF %d para BL %u)]\n", bloques[i], bf, bf, bloques[i]);
+        printf("\n");
+       // printf("[traducir_bloque_inodo() -> inodo.punterosDirectos[%u] = %d (reservado BF %d para BL %u)]\n", bloques[i], bf, bf, bloques[i]);
         
     }
 
