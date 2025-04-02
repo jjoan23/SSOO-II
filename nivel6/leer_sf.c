@@ -36,14 +36,11 @@ int main(int argc, char *argv[]) {
     printf("totBloques = %u\n", SB.totBloques);
     printf("totInodos = %u\n", SB.totInodos);
     
-    printf("\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30004, 400004 y 468750\n");
+  /*   printf("\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30004, 400004 y 468750\n");
     unsigned int bloques[] = {8, 204, 30004, 400004, 468750};
-    int bf;
     for (int i = 0; i < 5; i++) {
-        bf = traducir_bloque_inodo(1, bloques[i], 1);
-        printf("\n");
-       // printf("[traducir_bloque_inodo() -> inodo.punterosDirectos[%u] = %d (reservado BF %d para BL %u)]\n", bloques[i], bf, bf, bloques[i]);
-        
+        traducir_bloque_inodo(1, bloques[i], 1);
+        printf("\n");        
     }
 
     
@@ -75,7 +72,7 @@ int main(int argc, char *argv[]) {
 
     
     printf("\nSB.posPrimerInodoLibre = %u\n", SB.posPrimerInodoLibre + 1);
-    
+     */
     bumount();
     return EXIT_SUCCESS;
 }

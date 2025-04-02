@@ -59,6 +59,7 @@ struct superbloque {
  
  
     unsigned int punterosDirectos[12];  // 12 punteros a bloques directos
+    
     unsigned int punterosIndirectos[3]; /* 3 punteros a bloques indirectos:
     1 indirecto simple, 1 indirecto doble, 1 indirecto triple */
  
@@ -79,6 +80,7 @@ int reservar_bloque();
 int liberar_bloque(unsigned int nbloque);
 int leer_inodo(unsigned int ninodo, struct inodo *inodo);
 
+int escribir_inodo(unsigned int ninodo, struct inodo *inodo);
 int escribir_bit(unsigned int nbloque,unsigned int bit);
 int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr);
 int obtener_indice(unsigned int nblogico, int nivel_punteros);

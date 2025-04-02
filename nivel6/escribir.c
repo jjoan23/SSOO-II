@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
                 bumount();
                 return EXIT_FAILURE;
             }
+            //CANVIAR AIXO
             printf("Inodo reservado: %d\n", ninodo);
         }
         // Escribir el texto en el offset correspondiente
@@ -46,6 +47,8 @@ int main(int argc, char **argv) {
             bumount();
             return EXIT_FAILURE;
         }
+
+        //CANVIAR AIXO
         printf("Bytes escritos en el offset %d: %d\n", offsets[i], escritos);
 
         // Leer el contenido para comprobar
@@ -56,8 +59,6 @@ int main(int argc, char **argv) {
             bumount();
             return EXIT_FAILURE;
         }
-        printf("Contenido leído en el offset %d: %s\n", offsets[i], buf_original);
-
         // Obtener información del inodo
         struct STAT stat;
         if (mi_stat_f(ninodo, &stat) < 0) {
@@ -65,6 +66,7 @@ int main(int argc, char **argv) {
             bumount();
             return EXIT_FAILURE;
         }
+        //CANVIAR AIXO
         printf("Tamaño lógico del inodo: %d bytes\n", stat.tamEnBytesLog);
         printf("Bloques ocupados: %d\n", stat.numBloquesOcupados);
     }

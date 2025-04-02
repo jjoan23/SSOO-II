@@ -6,10 +6,9 @@
 int main(int argc, char *argv[]) {
     // Validación de sintaxis
     if (argc != 4) {
-        fprintf(stderr, "Sintaxis: ./permitir <nombre_dispositivo> <ninodo> <permisos>\n");
+        fprintf(stderr, "Sintaxis: escribir <nombre_dispositivo> <'$(cat fichero)'> <diferentes_inodos> Offsets: 9000, 209000, 30725000, 409605000, 480000000 Si diferentes_inodos=0 se reserva un solo inodo para todos los offsets \033[0m \n");
         return EXIT_FAILURE;
     }
-
     char *nombre_dispositivo = argv[1];
     int ninodo = atoi(argv[2]);
     int permisos = atoi(argv[3]);
@@ -38,6 +37,5 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    printf("Permisos del inodo %d cambiados a %d con éxito.\n", ninodo, permisos);
     return EXIT_SUCCESS;
 }

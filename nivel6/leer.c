@@ -53,9 +53,10 @@ int main(int argc, char **argv) {
 
     // Mostrar estadísticas
     char string[128];
+    //MALAMENT
     sprintf(string, "Bytes leídos: %d\n", total_leidos);
     write(2, string, strlen(string));
-
+    //MALAMENT
     sprintf(string, "Tamaño lógico del fichero: %d bytes\n", tamEnBytesLog);
     write(2, string, strlen(string));
 
