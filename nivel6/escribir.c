@@ -8,8 +8,8 @@
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        fprintf(stderr, "Uso: %s <nombre_dispositivo> <\"texto\"> <diferentes_inodos>\n", argv[0]);
-        return EXIT_FAILURE;
+        fprintf(stderr, RED "Uso: %s <nombre_dispositivo> <\"texto\"> <diferentes_inodos>\n" RESET, argv[0]);
+        return FALLO;
     }
 
     const char *nombre_dispositivo = argv[1];
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     // Montar el dispositivo
     if (bmount(nombre_dispositivo) < 0) {
         perror("Error al montar el dispositivo");
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     printf("longitud texto: %ld\n\n", strlen(argv[2]));
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
             if (ninodo < 0) {
                 perror("Error al reservar inodo");
                 bumount();
-                return EXIT_FAILURE;
+                return FALLO;
             }
             
         }
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
         if (escritos < 0) {
             perror("Error al escribir en el fichero");
             bumount();
-            return EXIT_FAILURE;
+            return FALLO;
         }
 
         //CANVIAR AIXO
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
         if (mi_stat_f(ninodo, &stat) < 0) {
             perror("Error al obtener información del inodo");
             bumount();
-            return EXIT_FAILURE;
+            return FALLO;
         }
         
         printf("Tamaño lógico del inodo: %d bytes\n", stat.tamEnBytesLog);
@@ -70,5 +70,5 @@ int main(int argc, char **argv) {
     // Desmontar el dispositivo
     bumount();
 
-    return EXIT_SUCCESS;
+    return EXITO;
 }

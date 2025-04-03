@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
             bumount();
             return FALLO;
         }
-        printf("Inodo %d truncado a %d bytes. Bloques liberados: %d\n", ninodo, nbytes, bloques_liberados);
+        printf(GRAY"Inodo %d truncado a %d bytes. Bloques liberados: %d\n"RESET, ninodo, nbytes, bloques_liberados);
     }
 
     // Llamamos a mi_stat_f()
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
         bumount();
         return FALLO;
     }
-
+    
     struct tm *ts;
     char atime[80];
     char mtime[80];

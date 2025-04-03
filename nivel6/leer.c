@@ -8,8 +8,8 @@
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        fprintf(stderr, "Uso: %s <nombre_dispositivo> <ninodo>\n", argv[0]);
-        return EXIT_FAILURE;
+        fprintf(stderr, RED "Uso: %s <nombre_dispositivo> <ninodo>\n" RESET, argv[0]);
+        return FALLO;
     }
 
     const char *nombre_dispositivo = argv[1];
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     // Montar el dispositivo
     if (bmount(nombre_dispositivo) < 0) {
         perror("Error al montar el dispositivo");
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     // Obtener el tamaño lógico del fichero
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     if (mi_stat_f(ninodo, &stat) < 0) {
         perror("Error al obtener el tamaño lógico del fichero");
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
     tamEnBytesLog = stat.tamEnBytesLog;
 
@@ -39,9 +39,9 @@ int main(int argc, char **argv) {
         memset(buffer_texto, 0, TAMB_BUFFER); // Limpiar el buffer
         leidos = mi_read_f(ninodo, buffer_texto, offset, TAMB_BUFFER);
         if (leidos < 0) {
-            perror("Error al leer el fichero");
+            perror(RED "Error al leer el fichero" RESET);
             bumount();
-            return EXIT_FAILURE;
+            return FALLO;
         }
 
         if (leidos > 0) {
@@ -63,5 +63,5 @@ int main(int argc, char **argv) {
     // Desmontar el dispositivo
     bumount();
 
-    return EXIT_SUCCESS;
+    return EXITO;
 }

@@ -6,7 +6,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
     printf("offset: %d\n", offset);
     if ((inodo.permisos & 2) != 2) {
-        fprintf(stderr, "No hay permisos de escritura\n");
+        fprintf(stderr, RED "No hay permisos de escritura\n" RESET);
         return FALLO;
     }
 
@@ -76,7 +76,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     // Comprobar permisos de lectura
     if ((inodo.permisos & 4) != 4) {
-        fprintf(stderr, "No hay permisos de lectura\n");
+        fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
         return FALLO;
     }
 
@@ -175,47 +175,47 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos) {
 
 
     
-    int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
+int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
 
-        //Leemos inodo
-        struct inodo inodo;
-        if(leer_inodo(ninodo, &inodo) == -1) {
-            return FALLO;
-        }
-    
-        //Comprobamos que el inodo tenga permisos de escritura
-        if((inodo.permisos & 2) != 2) {
-            fprintf(stderr, "No tiene permiso de escritura.\n");
-            return EXIT_FAILURE;
-        }
-    
-        //Comprobamos que no se trunquen mas allá del tamaño de bytes lógicos
-        if(nbytes > inodo.tamEnBytesLog) {
-            return FALLO;
-        }
-    
-        //Obtenemos el bloque lógico
-        int primerBL;
-        if(nbytes % BLOCKSIZE == 0) {
-            primerBL = nbytes / BLOCKSIZE;
-    
-        } else {
-            primerBL = (nbytes / BLOCKSIZE) + 1;
-        }
-    
-        //Liberamos bloques
-        int liberados = liberar_bloques_inodo(primerBL, &inodo);
-    
-        //Actulizamos información
-        inodo.mtime = time(NULL);
-        inodo.ctime = time(NULL);
-        inodo.tamEnBytesLog = nbytes;
-        inodo.numBloquesOcupados -= liberados;
-    
-        //Guardamos inodo
-        if(escribir_inodo(ninodo, &inodo) == -1) {
-            return FALLO;
-        }
-    
-        return liberados;
+    //Leemos inodo
+    struct inodo inodo;
+    if(leer_inodo(ninodo, &inodo) == -1) {
+        return FALLO;
     }
+
+    //Comprobamos que el inodo tenga permisos de escritura
+    if((inodo.permisos & 2) != 2) {
+        fprintf(stderr,RED "No tiene permiso de escritura.\n"RESET);
+        return FALLO;
+    }
+
+    //Comprobamos que no se trunquen mas allá del tamaño de bytes lógicos
+    if(nbytes > inodo.tamEnBytesLog) {
+        return FALLO;
+    }
+
+    //Obtenemos el bloque lógico
+    int primerBL;
+    if(nbytes % BLOCKSIZE == 0) {
+        primerBL = nbytes / BLOCKSIZE;
+
+    } else {
+        primerBL = (nbytes / BLOCKSIZE) + 1;
+    }
+
+    //Liberamos bloques
+    int liberados = liberar_bloques_inodo(primerBL, &inodo);
+
+
+    //Actulizamos información
+    inodo.mtime = time(NULL);
+    inodo.ctime = time(NULL);
+    inodo.tamEnBytesLog = nbytes;
+    inodo.numBloquesOcupados -= liberados;
+
+    //Guardamos inodo
+    if(escribir_inodo(ninodo, &inodo) == -1) {
+        return FALLO;
+    }
+    return liberados;
+}
