@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    printf("longitud texto: %ld\n\n", strlen(argv[2]));
+
+    
     // Escritura en los offsets
     for (int i = 0; i < NUM_OFFSETS; i++) {
         if (diferentes_inodos || i == 0) {
@@ -37,9 +40,9 @@ int main(int argc, char **argv) {
                 bumount();
                 return EXIT_FAILURE;
             }
-            //CANVIAR AIXO
-            printf("Inodo reservado: %d\n", ninodo);
+            
         }
+        printf("Inodo reservado: %d\n", ninodo);
         // Escribir el texto en el offset correspondiente
         int escritos = mi_write_f(ninodo, texto, offsets[i], tam_texto);
         if (escritos < 0) {
@@ -51,14 +54,6 @@ int main(int argc, char **argv) {
         //CANVIAR AIXO
         printf("Bytes escritos en el offset %d: %d\n", offsets[i], escritos);
 
-        // Leer el contenido para comprobar
-        memset(buf_original, 0, tam_texto);
-        int leidos = mi_read_f(ninodo, buf_original, offsets[i], tam_texto);
-        if (leidos < 0) {
-            perror("Error al leer el fichero");
-            bumount();
-            return EXIT_FAILURE;
-        }
         // Obtener información del inodo
         struct STAT stat;
         if (mi_stat_f(ninodo, &stat) < 0) {
@@ -66,9 +61,10 @@ int main(int argc, char **argv) {
             bumount();
             return EXIT_FAILURE;
         }
-        //CANVIAR AIXO
+        
         printf("Tamaño lógico del inodo: %d bytes\n", stat.tamEnBytesLog);
         printf("Bloques ocupados: %d\n", stat.numBloquesOcupados);
+        printf("\n");
     }
 
     // Desmontar el dispositivo

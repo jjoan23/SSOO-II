@@ -4,6 +4,8 @@
 #include "bloques.h"
 #include "ficheros_basico.h"
 
+#define DEBUG4 0
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Uso: %s <nombre_dispositivo>\n", argv[0]);
@@ -36,13 +38,14 @@ int main(int argc, char *argv[]) {
     printf("totBloques = %u\n", SB.totBloques);
     printf("totInodos = %u\n", SB.totInodos);
     
-  /*   printf("\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30004, 400004 y 468750\n");
-    unsigned int bloques[] = {8, 204, 30004, 400004, 468750};
-    for (int i = 0; i < 5; i++) {
-        traducir_bloque_inodo(1, bloques[i], 1);
-        printf("\n");        
-    }
-
+    #if DEBUG4
+        printf("\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30004, 400004 y 468750\n");
+        unsigned int bloques[] = {8, 204, 30004, 400004, 468750};
+        for (int i = 0; i < 5; i++) {
+            traducir_bloque_inodo(1, bloques[i], 1);
+            printf("\n");        
+        }
+    #endif
     
     struct inodo inodo;
     leer_inodo(0, &inodo);
@@ -56,23 +59,20 @@ int main(int argc, char *argv[]) {
     strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
     ts = localtime(&inodo.btime);
     strftime(btime, sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
-    printf("\nDATOS DEL DIRECTORIO RAIZ\n");
-    printf("tipo: %c\n", inodo.tipo);
-    printf("permisos: %u\n", inodo.permisos);
-
-    printf("atime: %s\n", atime);
-    printf("mtime: %s\n", mtime);
-    printf("ctime: %s\n", ctime);
-    printf("btime: %s\n", btime);
-    
-    printf("nlinks: %u\n", inodo.nlinks);
-    printf("tamEnBytesLog: %u\n", inodo.tamEnBytesLog);
-    printf("numBloquesOcupados: %u\n", inodo.numBloquesOcupados);
-    
-
-    
-    printf("\nSB.posPrimerInodoLibre = %u\n", SB.posPrimerInodoLibre + 1);
-     */
+    #if DEBUG4
+        printf("\nDATOS DEL INODO 0\n");
+        printf("tipo: %c\n", inodo.tipo);
+        printf("permisos: %u\n", inodo.permisos);
+        printf("atime: %s\n", atime);
+        printf("mtime: %s\n", mtime);
+        printf("ctime: %s\n", ctime);
+        printf("btime: %s\n", btime);
+        
+        printf("nlinks: %u\n", inodo.nlinks);
+        printf("tamEnBytesLog: %u\n", inodo.tamEnBytesLog);
+        printf("numBloquesOcupados: %u\n", inodo.numBloquesOcupados);
+        printf("\nSB.posPrimerInodoLibre = %u\n", SB.posPrimerInodoLibre + 1);
+    #endif
     bumount();
     return EXIT_SUCCESS;
 }
