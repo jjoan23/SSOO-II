@@ -473,13 +473,17 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
             if (nivel_punteros == nRangoBL) {
                 inodo.punterosIndirectos[nRangoBL - 1] = ptr;
                 if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
-                printf("[traducir_bloque_inodo() → inodo.punterosIndirectos[%d] = %u (reservado BF %u para punteros_nivel%d)]\n",
+                #if DEBUG4
+                    printf("[traducir_bloque_inodo() → inodo.punterosIndirectos[%d] = %u (reservado BF %u para punteros_nivel%d)]\n",
                        nRangoBL - 1, ptr, ptr, nivel_punteros);
+                #endif
             } else {
                 buffer[indice] = ptr;
                 if (bwrite(ptr_ant, buffer) == FALLO) return FALLO;
-                printf("[traducir_bloque_inodo() → punteros_nivel%d[%d] = %u (reservado BF %u para punteros_nivel%d)]\n",
+                #if DEBUG4
+                    printf("[traducir_bloque_inodo() → punteros_nivel%d[%d] = %u (reservado BF %u para punteros_nivel%d)]\n",
                        nivel_punteros + 1, indice, ptr, ptr, nivel_punteros);
+                #endif
             }
             memset(buffer, 0, BLOCKSIZE);
         } 
