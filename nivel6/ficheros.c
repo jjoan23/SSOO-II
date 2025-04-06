@@ -4,9 +4,10 @@
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
-    printf("offset: %d\n", offset);
+
+    // Comprobar permisos de escritura
     if ((inodo.permisos & 2) != 2) {
-        fprintf(stderr, RED "No hay permisos de escritura\n" RESET);
+        fprintf(stderr, "No hay permisos de escritura\n");
         return FALLO;
     }
 
@@ -20,6 +21,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     unsigned int bytes_escritos = 0;
 
     if (primerBL == ultimoBL) {
+        // Caso: todo el rango de escritura está dentro de un único bloque lógico
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
         if (nbfisico == FALLO) return FALLO;
 
@@ -29,6 +31,9 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         bytes_escritos += nbytes;
     } else {
+        // Caso: el rango de escritura abarca múltiples bloques lógicos
+
+        // Escribir el primer bloque lógico
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
         if (nbfisico == FALLO) return FALLO;
 
@@ -38,6 +43,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         bytes_escritos += BLOCKSIZE - desp1;
 
+        // Escribir los bloques intermedios
         for (unsigned int bl = primerBL + 1; bl < ultimoBL; bl++) {
             nbfisico = traducir_bloque_inodo(ninodo, bl, 1);
             if (nbfisico == FALLO) return FALLO;
@@ -46,6 +52,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             bytes_escritos += BLOCKSIZE;
         }
 
+        // Escribir el último bloque lógico
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 1);
         if (nbfisico == FALLO) return FALLO;
 
@@ -56,12 +63,19 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         bytes_escritos += desp2 + 1;
     }
 
+    // Leer el inodo nuevamente para actualizarlo
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
-    if (offset + nbytes > inodo.tamEnBytesLog) inodo.tamEnBytesLog = offset + nbytes;
+    // Actualizar el tamaño lógico del inodo si se escribió más allá del tamaño actual
+    if (offset + nbytes > inodo.tamEnBytesLog) {
+        inodo.tamEnBytesLog = offset + nbytes;
+    }
+
+    // Actualizar los tiempos del inodo
     inodo.mtime = time(NULL);
     inodo.ctime = time(NULL);
 
+    // Guardar el inodo actualizado
     if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
     return bytes_escritos;
