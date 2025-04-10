@@ -39,65 +39,36 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
     return 0;
 }
 int initMB() {
-    unsigned char bufferMB[BLOCKSIZE];
-    memset(bufferMB, 0, BLOCKSIZE); // Inicializamos el buffer a 0
 
-    // Cargar superbloque
+    //Buffer
+    unsigned char buff[BLOCKSIZE];
+    memset(buff, 0, BLOCKSIZE);  //Todo a 0
+
+    // Leemos el superbloque
     struct superbloque SB;
-    if (bread(0, &SB) == FALLO) {
-        perror("Error leyendo el superbloque");
+    if(bread(posSB, &SB) == -1) {
         return FALLO;
     }
-/* 
-    // Corregimos el cálculo de los metadatos
-    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 2; // Incluye superbloque
-    int bitsMetadatos = tamMetadatos;
-    int bytesMetadatos = bitsMetadatos / 8;
-    int restoBits = bitsMetadatos % 8;
 
-    int bloquesCompletos = bytesMetadatos / BLOCKSIZE;
+    // Tamaño MB
+    int tamMB = SB.posUltimoBloqueMB - SB.posPrimerBloqueMB;
 
-    for (int i = 0; i < bloquesCompletos; i++) {
-        memset(bufferMB, 255, BLOCKSIZE);
-        if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
-            perror("Error escribiendo bloque completo del MB");
+    //Inicializamos el mapa de bits
+    for(int i = SB.posPrimerBloqueMB; i <= tamMB + SB.posPrimerBloqueMB; i++) {
+        if(bwrite(i, buff) == -1) {
             return FALLO;
         }
     }
 
-    // Último bloque parcial
-    memset(bufferMB, 0, BLOCKSIZE);
-    for (int i = 0; i < (bytesMetadatos % BLOCKSIZE); i++) {
-        bufferMB[i] = 255;
-    }
+    // Ponemos a 1 los bits correspondientes
+    for(unsigned int i = posSB; i < SB.posPrimerBloqueDatos; i++) {
 
-    if (restoBits > 0) {
-        bufferMB[bytesMetadatos % BLOCKSIZE] |= (uint8_t)(255 << (8 - restoBits));
-    }
-
-    if (bwrite(SB.posPrimerBloqueMB + bloquesCompletos, bufferMB) == FALLO) {
-        perror("Error escribiendo el último bloque parcial del MB");
-        return FALLO;
-    }
- */
-
-    
-
-    // Actualizar superbloque
-    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 2; // Incluye superbloque
-    for (size_t i = 0; i < tamMetadatos; i++)
-    {
-        escribir_bit(i, 1);
-    }
-    
-    SB.cantBloquesLibres -= tamMetadatos;
-    if (bwrite(0, &SB) == FALLO) {
-        perror("Error actualizando el superbloque");
-        return FALLO;
+        reservar_bloque();
     }
 
     return EXITO;
 }
+
 
 int initAI() {
     struct superbloque SB;
@@ -271,29 +242,26 @@ int reservar_bloque() {
 
 
 int liberar_bloque(unsigned int nbloque) {
+
+    //Leemos superbloque
     struct superbloque SB;
-
-    // Leer el superbloque
-    if (bread(0, &SB) == -1) {
-        perror("Error leyendo el superbloque");
+    if(bread(posSB, &SB) == -1) {
         return FALLO;
     }
-
-    // Marcar el bloque como libre en el mapa de bits
-    if (escribir_bit(nbloque, 0) == -1) {
-        perror("Error escribiendo bit en el mapa de bits");
-        return FALLO;
-    }
-
-    // Incrementar el contador de bloques libres en el superbloque
-    SB.cantBloquesLibres++;
     
-    // Guardar el superbloque actualizado
-    if (bwrite(0, &SB) == -1) {
-        perror("Error actualizando el superbloque");
-        return -1;
+    //Ponemos a 0 el bit del MB
+    if(escribir_bit(nbloque, 0) == -1) {
+        return FALLO;
     }
 
+    //Incrementamos la cantidad de bloques libres
+    SB.cantBloquesLibres++;
+
+    if(bwrite(posSB, &SB) == -1) {
+        return FALLO;
+    }
+
+    //Devolver numero de bloque
     return nbloque;
 }
 
@@ -489,7 +457,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
                 inodo.punterosIndirectos[nRangoBL - 1] = ptr;
                 if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
                 #if DEBUG4
-                printf(GRAY"[traducir_bloque_inodo() → inodo.punterosIndirectos[%d] = %u (reservado BF %u para punteros_nivel%d)]\n"RESET,
+                    printf(GRAY"[traducir_bloque_inodo() → inodo.punterosIndirectos[%d] = %u (reservado BF %u para punteros_nivel%d)]\n"RESET,
                        nRangoBL - 1, ptr, ptr, nivel_punteros);
                 #endif
             } else {
@@ -497,7 +465,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
                 buffer[indice] = ptr;
                 if (bwrite(ptr_ant, buffer) == FALLO) return FALLO;
                 #if DEBUG4
-                printf(GRAY"[traducir_bloque_inodo() → punteros_nivel%d[%d] = %u (reservado BF %u para punteros_nivel%d)]\n"RESET,
+                    printf(GRAY"[traducir_bloque_inodo() → punteros_nivel%d[%d] = %u (reservado BF %u para punteros_nivel%d)]\n"RESET,
                        nivel_punteros + 1, indice, ptr, ptr, nivel_punteros);
                 #endif
             }
@@ -524,7 +492,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
         if (nRangoBL == 0) {
             inodo.punterosDirectos[nblogico] = ptr;
             #if DEBUG4
-            printf("[traducir_bloque_inodo() → inodo.punterosDirectos[%u] = %u (reservado BF %u para BL %u)]\n",
+                printf(GRAY"[traducir_bloque_inodo() → inodo.punterosDirectos[%u] = %u (reservado BF %u para BL %u)]\n"RESET,
                    nblogico, ptr, ptr, nblogico);
             #endif
         } else {
@@ -532,7 +500,7 @@ int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned c
             buffer[indice] = ptr;
             if (bwrite(ptr_ant, buffer) == FALLO) return FALLO;
             #if DEBUG4
-            printf("[traducir_bloque_inodo() → punteros_nivel1[%d] = %u (reservado BF %u para BL %u)]\n",
+                printf(GRAY"[traducir_bloque_inodo() → punteros_nivel1[%d] = %u (reservado BF %u para BL %u)]\n"RESET,
                    indice, ptr, ptr, nblogico);
             #endif
         }
@@ -615,8 +583,8 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
 
     memset(bufAux_punteros, 0, BLOCKSIZE);
 
-    #if DEBUGGER6
-        printf(GRAY"[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n"RESET, primerBL, ultimoBL);
+    #if DEBUG6
+        printf(CYAN"[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n"RESET, primerBL, ultimoBL);
     #endif
     
     for(nBL = primerBL; nBL <= ultimoBL; nBL++) {  //recorrido BLs
@@ -648,14 +616,14 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
             if(nRangoBL == 0) { //es un puntero Directo
                 inodo->punterosDirectos[nBL] = 0;
 
-                #if DEBUGGER6
+                #if DEBUG6
                     printf(GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
                 #endif
 
             } else {
                 nivel_punteros = 1;
 
-                #if DEBUGGER6
+                #if DEBUG6
                     printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de datos para BL: %i]\n"RESET, ptr, nBL);
                 #endif
 
@@ -672,7 +640,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
                         }
                         liberados++;
 
-                        #if DEBUGGER6
+                        #if DEBUG6
                             printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de punteros_nivel%i correspondiente al BL: %i]\n"RESET, ptr, nivel_punteros, nBL);
                         #endif
 
@@ -710,7 +678,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
         }
     }
 
-    #if DEBUGGER6
+    #if DEBUG6
         printf("[liberar_bloques_inodo()→ total bloques liberados: %d]\n", liberados);
     #endif
 

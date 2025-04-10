@@ -12,41 +12,30 @@ int main(int argc, char **argv) {
     }
 
     // Obtenemos parámetros
-    const char *nombre_dispositivo = argv[1];
     int ninodo = atoi(argv[2]);
     int nbytes = atoi(argv[3]);
 
     // Montamos dispositivo
-    if (bmount(nombre_dispositivo) == -1) {
+    if (bmount(argv[1]) == -1) {
         perror("Error montando el dispositivo");
         return FALLO;
     }
 
-    int bloques_liberados;
     // Si nbytes = 0, liberar_inodo(), si no, mi_truncar_f()
     if (nbytes == 0) {
-        bloques_liberados = liberar_inodo(ninodo);
-        if (bloques_liberados == -1) {
+        if (liberar_inodo(ninodo)) {
             perror("Error liberando el inodo");
             bumount();
             return FALLO;
         }
-        printf("Inodo %d liberado. Bloques liberados: %d\n", ninodo, bloques_liberados);
-    } else {
-        bloques_liberados = mi_truncar_f(ninodo, nbytes);
-        if (bloques_liberados == -1) {
-            perror("Error truncando el inodo");
-            bumount();
-            return FALLO;
+    }else {
+            mi_truncar_f(ninodo, nbytes);
         }
-        printf(GRAY"Inodo %d truncado a %d bytes. Bloques liberados: %d\n"RESET, ninodo, nbytes, bloques_liberados);
-    }
 
     // Llamamos a mi_stat_f()
     struct STAT p_stat;
     if (mi_stat_f(ninodo, &p_stat) == -1) {
         perror("Error obteniendo información del inodo");
-        bumount();
         return FALLO;
     }
     
