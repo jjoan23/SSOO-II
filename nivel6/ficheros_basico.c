@@ -153,8 +153,9 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
         return FALLO;
     }
     
-    posbyte %= BLOCKSIZE;
-    unsigned char mascara = 128 >> posbit;
+    posbyte = posbyte % BLOCKSIZE;
+    unsigned char mascara = 128;
+    mascara >>= posbit;
     
     if (bit == 1) {
         bufferMB[posbyte] |= mascara;
@@ -188,10 +189,15 @@ char leer_bit(unsigned int nbloque) {
         return FALLO;
     }
     
-    posbyte %= BLOCKSIZE;
-    unsigned char mascara = 128 >> posbit;
+    posbyte = posbyte % BLOCKSIZE;
+    unsigned char mascara = 128;
+    mascara >>= posbit;
     
-    return (bufferMB[posbyte] & mascara) ? 1 : 0;
+    if (bufferMB[posbyte] & mascara) {
+        return 1; // El bit está ocupado
+    } else {
+        return 0; // El bit está libre
+    }
 }
 
 int reservar_bloque() {
