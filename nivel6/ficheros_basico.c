@@ -418,9 +418,9 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros) {
         if (nivel_punteros == 3) {
             return (nblogico - INDIRECTOS1) / (NPUNTEROS * NPUNTEROS);
         } else if (nivel_punteros == 2) {
-            return ((nblogico - INDIRECTOS1) / NPUNTEROS) % NPUNTEROS;
+            return  ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) / NPUNTEROS;
         } else if (nivel_punteros == 1) {
-            return (nblogico - INDIRECTOS1) % NPUNTEROS;
+            return ((nblogico - INDIRECTOS1) % (NPUNTEROS * NPUNTEROS)) % NPUNTEROS;
         }
     }
     fprintf(stderr, "Error: Índice fuera de rango (nblogico=%u, nivel_punteros=%d)\n", nblogico, nivel_punteros);
@@ -571,7 +571,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
     int liberados = 0;  // nº de bloques liberados
 
     if(inodo->tamEnBytesLog == 0) { //el fichero está vacío
-        return 0;
+        return liberados    ;
     }
 
     if((inodo->tamEnBytesLog % BLOCKSIZE) == 0) {
@@ -648,19 +648,6 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
                         if(nivel_punteros == nRangoBL) {
                             inodo->punterosDirectos[nRangoBL -1] = 0;
 
-                            switch(nRangoBL) {
-                                case 1:
-                                    nBL = INDIRECTOS0;
-                                    break;
-                                
-                                case 2:
-                                    nBL = INDIRECTOS1;
-                                    break;
-
-                                case 3:
-                                    nBL = INDIRECTOS2;
-                                    break;
-                            }
                         }
 
                         nivel_punteros++;
