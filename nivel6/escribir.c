@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
             
         }
         printf("Inodo reservado: %d\n", ninodo);
-        printf("offset: %d\n",offsets[i]);
         // Escribir el texto en el offset correspondiente
         int escritos = mi_write_f(ninodo, texto, offsets[i], tam_texto);
         if (escritos < 0) {
@@ -52,7 +51,9 @@ int main(int argc, char **argv) {
             return FALLO;
         }
 
-        
+        //CANVIAR AIXO
+        printf("Bytes escritos en el offset %d: %d\n", offsets[i], escritos);
+
         // Obtener información del inodo
         struct STAT stat;
         if (mi_stat_f(ninodo, &stat) < 0) {
@@ -60,9 +61,7 @@ int main(int argc, char **argv) {
             bumount();
             return FALLO;
         }
-        //AIXO ES NOU
-        printf("Bytes escritos: %d\n", escritos);
-
+        
         printf("Tamaño lógico del inodo: %d bytes\n", stat.tamEnBytesLog);
         printf("Bloques ocupados: %d\n", stat.numBloquesOcupados);
         printf("\n");

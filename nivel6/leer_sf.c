@@ -23,21 +23,7 @@ int main(int argc, char *argv[]) {
         bumount();
         return EXIT_FAILURE;
     }
-     // Traducir bloques lógicos
-     int ninodo = reservar_inodo('f', 6); // Tipo 'f' (fichero), permisos 6 (lectura y escritura)
-     unsigned int bloques_logicos[] = {8, 204, 30004, 400004, 468750};
-     unsigned int nblogico, nbfisico;
-     for (int i = 0; i < sizeof(bloques_logicos) / sizeof(bloques_logicos[0]); i++) {
-         nblogico = bloques_logicos[i];
-         nbfisico = traducir_bloque_inodo(ninodo, nblogico, 1); // Reservar si no existe
-         if (nbfisico == -1) {
-             perror("Error traduciendo bloque lógico");
-             bumount();
-             return EXIT_FAILURE;
-         }
-         printf("Bloque lógico %u traducido a bloque físico %u\n", nblogico, nbfisico);
-     }
-    
+
     printf("DATOS DEL SUPERBLOQUE\n");
     printf("posPrimerBloqueMB = %u\n", SB.posPrimerBloqueMB);
     printf("posUltimoBloqueMB = %u\n", SB.posUltimoBloqueMB);
