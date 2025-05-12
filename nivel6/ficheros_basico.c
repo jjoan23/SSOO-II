@@ -1,7 +1,7 @@
 #include "ficheros_basico.h"
 
 #define DEBUG4 1 //Debug del nivel 4
-#define DEBUG5 0 //Debug del nivel 4
+#define DEBUG5 1 //Debug del nivel 4
 #define DEBUG6 1 //Debug del nivel 6
 
 int tamMB(unsigned int nbloques) {
@@ -613,11 +613,17 @@ int traducir_bloque_inodo(unsigned int ninodo,unsigned int nblogico, unsigned ch
                  if (nivel_punteros == nRangoBL) { 
                      //el bloque cuelga directamente del inodo
                      inode.punterosIndirectos[nRangoBL-1] = ptr; // (imprimirlo)
+                        #if DEBUG4
+                            fprintf(stderr, GRAY"traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n"RESET,nRangoBL-1,inode.punterosIndirectos[nRangoBL-1],inode.punterosIndirectos[nRangoBL-1],nivel_punteros);
+                        #endif
                      //fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n",nRangoBL-1,inode.punterosIndirectos[nRangoBL-1],inode.punterosIndirectos[nRangoBL-1],nivel_punteros);
                  }
                  else {   //el bloque cuelga de otro bloque de punteros
                      buffer[indice] = ptr; // (imprimirlo)
-                     //fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n",nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
+                     #if DEBUG4
+                        fprintf(stderr, GRAY"traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n"RESET,nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
+                     #endif
+                        //fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n",nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
                      bwrite(ptr_ant, buffer);
                  }
              }
@@ -640,10 +646,16 @@ int traducir_bloque_inodo(unsigned int ninodo,unsigned int nblogico, unsigned ch
           inode.ctime = time(NULL);
           if (nRangoBL==0 ){
              inode.punterosDirectos[nblogico] = ptr ;
+             #if DEBUG4
+                fprintf(stderr, GRAY"traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n"RESET,nblogico,inode.punterosDirectos[nblogico],inode.punterosDirectos[nblogico], nblogico);
+             #endif
              //fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n",nblogico,inode.punterosDirectos[nblogico],inode.punterosDirectos[nblogico], nblogico);
              }// (imprimirlo)
           else{
              buffer[indice] = ptr; // (imprimirlo)
+            #if DEBUG4
+                fprintf(stderr, GRAY"traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n"RESET,indice,buffer[indice],buffer[indice],nblogico);
+             #endif
              //fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n",indice,buffer[indice],buffer[indice],nblogico);
              bwrite(ptr_ant, buffer);
           }
@@ -723,8 +735,8 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
 
     memset(bufAux_punteros, 0, BLOCKSIZE);
 
-    #if DEBUGGER6
-        printf(GRAY"[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n"RESET, primerBL, ultimoBL);
+    #if DEBUG6
+        printf(LBLUE"[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n"RESET, primerBL, ultimoBL);
     #endif
     
     for(nBL = primerBL; nBL <= ultimoBL; nBL++) {  //recorrido BLs
@@ -756,14 +768,14 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
             if(nRangoBL == 0) { //es un puntero Directo
                 inodo->punterosDirectos[nBL] = 0;
 
-                #if DEBUGGER6
+                #if DEBUG6
                     printf(GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
                 #endif
 
             } else {
                 nivel_punteros = 1;
 
-                #if DEBUGGER6
+                #if DEBUG6
                     printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de datos para BL: %i]\n"RESET, ptr, nBL);
                 #endif
 
@@ -780,7 +792,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
                         }
                         liberados++;
 
-                        #if DEBUGGER6
+                        #if DEBUG6
                             printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de punteros_nivel%i correspondiente al BL: %i]\n"RESET, ptr, nivel_punteros, nBL);
                         #endif
 
