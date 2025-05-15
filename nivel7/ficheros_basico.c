@@ -48,38 +48,7 @@ int initMB() {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
-/* 
-    // Corregimos el cálculo de los metadatos
-    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 2; // Incluye superbloque
-    int bitsMetadatos = tamMetadatos;
-    int bytesMetadatos = bitsMetadatos / 8;
-    int restoBits = bitsMetadatos % 8;
 
-    int bloquesCompletos = bytesMetadatos / BLOCKSIZE;
-
-    for (int i = 0; i < bloquesCompletos; i++) {
-        memset(bufferMB, 255, BLOCKSIZE);
-        if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
-            perror("Error escribiendo bloque completo del MB");
-            return FALLO;
-        }
-    }
-
-    // Último bloque parcial
-    memset(bufferMB, 0, BLOCKSIZE);
-    for (int i = 0; i < (bytesMetadatos % BLOCKSIZE); i++) {
-        bufferMB[i] = 255;
-    }
-
-    if (restoBits > 0) {
-        bufferMB[bytesMetadatos % BLOCKSIZE] |= (uint8_t)(255 << (8 - restoBits));
-    }
-
-    if (bwrite(SB.posPrimerBloqueMB + bloquesCompletos, bufferMB) == FALLO) {
-        perror("Error escribiendo el último bloque parcial del MB");
-        return FALLO;
-    }
- */
 
     
 
@@ -346,60 +315,7 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
     return EXITO;
 }
 
-/*int reservar_inodo(unsigned char tipo, unsigned char permisos) {
-    struct superbloque SB;
-    struct inodo inodo;
 
-    // Leer el superbloque
-    if (bread(0, &SB) == -1) {
-        perror("Error leyendo el superbloque");
-        return FALLO;
-    }
-
-    // Comprobar si hay inodos libres
-    if (SB.cantInodosLibres == 0) {
-        return FALLO; // No hay inodos libres
-    }
-
-    // Guardar la posición del primer inodo libre
-    unsigned int posInodoReservado = SB.posPrimerInodoLibre;
-
-    // Leer el inodo libre
-    if (leer_inodo(posInodoReservado, &inodo) == -1) {
-        perror("Error leyendo el inodo");
-        return FALLO;
-    }
-    
-    // Actualizar el superbloque para que apunte al siguiente inodo libre
-    SB.posPrimerInodoLibre = inodo.punterosDirectos[0];
-
-    // Initialize the inode
-    inodo.tipo = tipo;
-    inodo.permisos = permisos;
-    inodo.nlinks = 1;
-    inodo.tamEnBytesLog = 0;
-    inodo.numBloquesOcupados=0;
-    inodo.atime = inodo.mtime = inodo.ctime = inodo.btime = time(NULL);
-    
-    memset(inodo.punterosDirectos, 0, sizeof(inodo.punterosDirectos));
-    memset(inodo.punterosIndirectos, 0, sizeof(inodo.punterosIndirectos));
-
-    // Escribir el inodo actualizado
-    if (escribir_inodo(posInodoReservado, &inodo) == -1) {
-        perror("Error escribiendo el inodo");
-        return FALLO;
-    }
-    
-    // Decrementar la cantidad de inodos libres y actualizar el superbloque
-    SB.cantInodosLibres--;
-    if (bwrite(0, &SB) == -1) {
-        perror("Error actualizando el superbloque");
-        return FALLO;
-    }
-
-    return posInodoReservado;
-}
-*/
 int reservar_inodo(unsigned char tipo, unsigned char permisos){
     struct superbloque sb;
     int posInodoReservado;
@@ -423,6 +339,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos){
    inodoReserva.atime=time(NULL);
    inodoReserva.ctime=time(NULL);
    inodoReserva.mtime=time(NULL);
+   inodoReserva.btime=time(NULL);
    inodoReserva.numBloquesOcupados=0;
     
    for(int i=0;i<3;i++){

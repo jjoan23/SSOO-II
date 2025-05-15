@@ -1,3 +1,5 @@
+#include "directorios.h"
+
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     if (camino[0] != '/') { // CAMINO_INCORRECTO
         return -1;
@@ -38,7 +40,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
         *p_entrada = 0;
         return 0;
     }
-    if(extraer_camino(camino_parcial, inicial, final, &tipo)=FALLO){
+    if(extraer_camino(camino_parcial, inicial, final, &tipo)==FALLO){
         return ERROR_CAMINO_INCORRECTO;
     }
     //AQUEST NO SE SI SE COMPROVA AIXI
@@ -61,7 +63,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             // Si hemos llegado al final del buffer, leer siguiente bloque
             if (indice_buffer == BLOCKSIZE/sizeof(struct entrada)) {
                 memset(buffer_entradas, 0, BLOCKSIZE);
-                mi_read_f(*p_inodo_dir, buffer_entradas, offset, BLOCKSIZE)                
+                mi_read_f(*p_inodo_dir, buffer_entradas, offset, BLOCKSIZE);
                 indice_buffer = 0;
                 offset += BLOCKSIZE;
             }
@@ -69,10 +71,11 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
             indice_buffer++;
         }
     }
-    if ((strincmp(inicial, entrada.nombre) == 0) && (num_entrada_inodo == cant_entradas_inodo)) {
-        swicth(reservar){
+    if ((strcmp(inicial, entrada.nombre) == 0) && (num_entrada_inodo == cant_entradas_inodo)) {
+        switch(reservar) {
             case 0:
                 return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
+                break;
             case 1:
                 if (inodo_dir.tipo == 'f') {
                     return ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO;
@@ -101,6 +104,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     }
                     return FALLO;
                 }
+                break;
         }
     
     }

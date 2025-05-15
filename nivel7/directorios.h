@@ -1,4 +1,4 @@
-#include "ficheros_basico.h" 
+#include "ficheros.h" 
 
 #define ERROR_CAMINO_INCORRECTO (-2)
 #define ERROR_PERMISO_LECTURA (-3)
