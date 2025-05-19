@@ -1,6 +1,7 @@
 #include "directorios.h"
+#define DEBUGN7 1
 
-#define DEBUG7 1
+#define NUM_ENTRADAS (BLOCKSIZE / sizeof(struct entrada))
 
 //Obtiene primer directorio o fichero del path
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
@@ -17,16 +18,16 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
         camino = dir; 
         strcpy(final,camino);
         *tipo = 'd';
-        return 'd';
     }
     else{
         strcpy(inicial,camino);
         strcpy(final, "");
         *tipo = 'f';
-        return 'f';
     }
+    return EXIT_SUCCESS;
 
 }
+
 
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos){
     if (strcmp(camino_parcial,"/")== 0){  //camino parcial es "/"
@@ -39,10 +40,10 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     char final[strlen(camino_parcial)];memset(final,0,strlen(camino_parcial));
     char tipo;
 
-    if (extraer_camino(camino_parcial,inicial,final,&tipo) == -1) {//Si la extraccion de camino falla, abortamos la busqueda 
+    if (extraer_camino(camino_parcial,inicial,final,&tipo) == -2) {//Si la extraccion de camino falla, abortamos la busqueda 
         return ERROR_CAMINO_INCORRECTO;
     }
-    #if DEBUG7
+    #if DEBUGN7
         fprintf(stderr, "buscar_entrada()-->inicial: %s, final: %s, reservar: %d\n", inicial, final, reservar);
     #endif
     struct inodo inodo_dir;
@@ -51,9 +52,6 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     if ((inodo_dir.permisos & 4) != 4){
         return ERROR_PERMISO_LECTURA;
     }
-
-    //unsigned int ent_per_bloq = BLOCKSIZE / sizeof(struct entrada);
-    //struct entrada buffer[ent_per_bloq];
 
     //Calcular cantidad de entradas que contiene el inodo
     unsigned int n_entradas = inodo_dir.tamEnBytesLog/sizeof(struct entrada);
@@ -95,10 +93,12 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                     } else{
                         entrada.ninodo = reservar_inodo('f', permisos);
                     }
-                    #if DEBUG7
+                    
+                    #if DEBUGN7
                         fprintf(stderr, "buscar_entrada()-->reservado inodo %d tipo %c con permisos %d para %s\n", entrada.ninodo, tipo, permisos, entrada.nombre);
                         fprintf(stderr, "buscar_entrada()-->creada entrada: %s, %d\n", entrada.nombre, entrada.ninodo);
                     #endif
+
                     //escribir entrada
                     if (mi_write_f(*p_inodo_dir, &entrada, i_entrada_inodo*sizeof(struct entrada), sizeof(struct entrada)) == -1) { // Error de escritura
                         if (entrada.ninodo != -1){
@@ -127,30 +127,28 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
 }
 
 
-void mostrar_error_buscar_entrada(int error) {
-    switch (error) {
-    case ERROR_CAMINO_INCORRECTO:
+void mostrar_error_buscar_entrada(int error){
+    switch (error){
+    case -2:
         fprintf(stderr, "\033[1;31mError: Camino incorrecto.\033[0m\n");
         break;
-    case ERROR_PERMISO_LECTURA:
+    case -3:
         fprintf(stderr, "\033[1;31mError: Permiso denegado de lectura.\033[0m\n");
         break;
-    case ERROR_NO_EXISTE_ENTRADA_CONSULTA:
+    case -4:
         fprintf(stderr, "\033[1;31mError: No existe el archivo o el directorio.\033[0m\n");
         break;
-    case ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO:
+    case -5:
         fprintf(stderr, "\033[1;31mError: No existe algún directorio intermedio.\033[0m\n");
         break;
-    case ERROR_PERMISO_ESCRITURA:
+    case -6:
         fprintf(stderr, "\033[1;31mError: Permiso denegado de escritura.\033[0m\n");
         break;
-    case ERROR_ENTRADA_YA_EXISTENTE:
+    case -7:
         fprintf(stderr, "\033[1;31mError: El archivo ya existe.\033[0m\n");
         break;
-    case ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO:
+    case -8:
         fprintf(stderr, "\033[1;31mError: No es un directorio.\033[0m\n");
         break;
-    default:
-        fprintf(stderr, "\033[1;31mError desconocido.\033[0m\n");
     }
 }

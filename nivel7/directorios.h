@@ -1,4 +1,5 @@
 #include "ficheros.h" 
+
 #define ERROR_CAMINO_INCORRECTO (-2)
 #define ERROR_PERMISO_LECTURA (-3)
 #define ERROR_NO_EXISTE_ENTRADA_CONSULTA (-4)
@@ -12,6 +13,8 @@ struct entrada {
   char nombre[TAMNOMBRE];
   unsigned int ninodo;
 };
+
+
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos);
 void mostrar_error_buscar_entrada(int error);
