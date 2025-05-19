@@ -1,135 +1,156 @@
 #include "directorios.h"
 
-int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
-    if (camino[0] != '/') { // CAMINO_INCORRECTO
-        return -1;
+#define DEBUG7 1
+
+//Obtiene primer directorio o fichero del path
+int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
+    const char bar = '/';
+    char *dir;
+    if (camino[0] != bar){
+        return ERROR_CAMINO_INCORRECTO; //El primer carácter no es el separador '/' o camino vacío
     }
 
-    const char *primer_char = camino + 1; // Skip first '/'
-    const char *siguiente_barra = strchr(primer_char, '/');
-
-    if (siguiente_barra) { // Es un directorio
-        strncpy(inicial, primer_char, siguiente_barra - primer_char);
-        inicial[siguiente_barra - primer_char] = '\0';
-        strcpy(final, siguiente_barra);
+    camino++;
+    dir = strchr(camino, bar);
+    if (dir != NULL){
+        strncpy(inicial,camino,(dir-camino));
+        camino = dir; 
+        strcpy(final,camino);
         *tipo = 'd';
-    } else { // Es un fichero
-        strcpy(inicial, primer_char);
+        return 'd';
+    }
+    else{
+        strcpy(inicial,camino);
         strcpy(final, "");
         *tipo = 'f';
+        return 'f';
     }
 
-    return 0;
 }
 
-
-int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos)
-{
-    struct entrada entrada;
-    struct inodo inodo_dir;
-    char inicial[sizeof(entrada.nombre)];
-    char final[strlen(camino_parcial)];
-    char tipo;
-    int cant_entradas_inodo,num_entrada_inodo;
-    
-  
-    if (strcmp(camino_parcial, "/") == 0) {
-        struct superbloque SB;
-        bread(posSB, &SB);
-        *p_inodo = SB.posInodoRaiz;
+int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos){
+    if (strcmp(camino_parcial,"/")== 0){  //camino parcial es "/"
+        *p_inodo = 0; //Raiz asociada siempre al inodo 0
         *p_entrada = 0;
         return 0;
     }
-    if(extraer_camino(camino_parcial, inicial, final, &tipo)==FALLO){
+    struct entrada entrada;memset(&entrada,0,sizeof(entrada));
+    char inicial[sizeof(entrada.nombre)];memset(inicial,0,sizeof(entrada.nombre));
+    char final[strlen(camino_parcial)];memset(final,0,strlen(camino_parcial));
+    char tipo;
+
+    if (extraer_camino(camino_parcial,inicial,final,&tipo) == -1) {//Si la extraccion de camino falla, abortamos la busqueda 
         return ERROR_CAMINO_INCORRECTO;
     }
-    //AQUEST NO SE SI SE COMPROVA AIXI
-    if(leer_inodo(*p_inodo_dir, &inodo_dir)==FALLO){
-        return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
+    #if DEBUG7
+        fprintf(stderr, "buscar_entrada()-->inicial: %s, final: %s, reservar: %d\n", inicial, final, reservar);
+    #endif
+    struct inodo inodo_dir;
+    leer_inodo(*p_inodo_dir, &inodo_dir);
+
+    if ((inodo_dir.permisos & 4) != 4){
+        return ERROR_PERMISO_LECTURA;
     }
-      // Buffer para optimizar la lectura
-    struct entrada buffer_entradas[BLOCKSIZE/sizeof(struct entrada)];
-    memset(buffer_entradas, 0, BLOCKSIZE);
-    
-    // Calcular cantidad de entradas del inodo
-    cant_entradas_inodo = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
-    num_entrada_inodo = 0;
-    
-    if (cant_entradas_inodo > 0) {
-        int offset = 0;
-        int indice_buffer = BLOCKSIZE/sizeof(struct entrada);
-        
-        while (num_entrada_inodo < cant_entradas_inodo && strcmp(inicial, buffer_entradas[indice_buffer].nombre) != 0) {
-            // Si hemos llegado al final del buffer, leer siguiente bloque
-            if (indice_buffer == BLOCKSIZE/sizeof(struct entrada)) {
-                memset(buffer_entradas, 0, BLOCKSIZE);
-                mi_read_f(*p_inodo_dir, buffer_entradas, offset, BLOCKSIZE);
-                indice_buffer = 0;
-                offset += BLOCKSIZE;
-            }
-            num_entrada_inodo++;
-            indice_buffer++;
+
+    //unsigned int ent_per_bloq = BLOCKSIZE / sizeof(struct entrada);
+    //struct entrada buffer[ent_per_bloq];
+
+    //Calcular cantidad de entradas que contiene el inodo
+    unsigned int n_entradas = inodo_dir.tamEnBytesLog/sizeof(struct entrada);
+    unsigned int i_entrada_inodo = 0; //nº de entrada inicial
+
+    if (n_entradas > 0){
+        memset(&entrada,0,sizeof(entrada));
+        mi_read_f(*p_inodo_dir, &entrada, 0, sizeof(struct entrada));
+
+        while ((i_entrada_inodo < n_entradas) && (strcmp(inicial, entrada.nombre))!=0){
+            i_entrada_inodo++;
+            memset(&entrada,0,sizeof(entrada));
+            mi_read_f(*p_inodo_dir, &entrada, i_entrada_inodo*sizeof(struct entrada), sizeof(struct entrada));//...leer la entrada
         }
     }
-    if ((strcmp(inicial, entrada.nombre) == 0) && (num_entrada_inodo == cant_entradas_inodo)) {
-        switch(reservar) {
-            case 0:
+    
+    if ( (i_entrada_inodo == n_entradas) && (strcmp(inicial, entrada.nombre)!=0) ){//La entrada no existe
+        switch (reservar){
+            case 0: //modo consulta. Como no existe retornamos error
                 return ERROR_NO_EXISTE_ENTRADA_CONSULTA;
                 break;
-            case 1:
-                if (inodo_dir.tipo == 'f') {
+            case 1: //Modo escritura
+                //Creamos la entrada en el directorio referenciado por *p_inodo_dir
+                //si es fichero no permitir escritura
+                if (inodo_dir.tipo == 'f'){
                     return ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO;
                 }
-                if ((inodo_dir.permisos & 2) != 2) {
+                //si es directorio comprobar que tiene permiso de escritura
+                if ((inodo_dir.permisos & 2) != 2){
                     return ERROR_PERMISO_ESCRITURA;
-                }
-                strcpy(entrada.nombre, inicial);
-                
-                if (tipo == 'd') {
-                    if (strcmp(final, "/") == 0) {
-                        // Reservar inodo como directorio
-                        entrada.ninodo = reservar_inodo('d', permisos);
-                    } else {
-                        return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
-                    }
                 } else {
-                    // Reservar inodo como fichero
-                    entrada.ninodo = reservar_inodo('f', permisos);
-                }
-                
-                // Escribir la entrada en el directorio padre
-                if (mi_write_f(*p_inodo_dir, &entrada, num_entrada_inodo * sizeof(struct entrada), sizeof(struct entrada)) < 0) {
-                    if (entrada.ninodo != FALLO) {
-                        liberar_inodo(entrada.ninodo);
+                    strcpy(entrada.nombre, inicial);
+                    if (tipo == 'd'){
+                        if (strcmp(final, "/") == 0){               
+                            entrada.ninodo = reservar_inodo('d', permisos);
+                        } else{ //cuelgan más diretorios o ficheros
+                            return ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO;
+                        }
+                    } else{
+                        entrada.ninodo = reservar_inodo('f', permisos);
                     }
-                    return FALLO;
+                    #if DEBUG7
+                        fprintf(stderr, "buscar_entrada()-->reservado inodo %d tipo %c con permisos %d para %s\n", entrada.ninodo, tipo, permisos, entrada.nombre);
+                        fprintf(stderr, "buscar_entrada()-->creada entrada: %s, %d\n", entrada.nombre, entrada.ninodo);
+                    #endif
+                    //escribir entrada
+                    if (mi_write_f(*p_inodo_dir, &entrada, i_entrada_inodo*sizeof(struct entrada), sizeof(struct entrada)) == -1) { // Error de escritura
+                        if (entrada.ninodo != -1){
+                            liberar_inodo(entrada.ninodo);
+                        }
+                        return EXIT_FAILURE;
+                    }
                 }
                 break;
         }
-    
     }
-    if (strcmp(final, "/") == 0 || strcmp(final, "") == 0) {
-        if ((num_entrada_inodo < cant_entradas_inodo) && (reservar == 1)) {
-            return ERROR_ENTRADA_YA_EXISTENTE;
-        }
+    if(strcmp(final, "/") == 0 || strcmp(final, "") == 0){
+        if((i_entrada_inodo < n_entradas) && (reservar == 1)){
+            *p_entrada = i_entrada_inodo;
+            return ERROR_ENTRADA_YA_EXISTENTE;//modo escritura y la entrada ya existe
+        } // cortamos la recursividad
+
         *p_inodo = entrada.ninodo;
-        *p_entrada = num_entrada_inodo;
-        return EXITO;
-    } else {
+        *p_entrada = i_entrada_inodo;
+        return EXIT_SUCCESS;
+    }else{
         *p_inodo_dir = entrada.ninodo;
         return buscar_entrada(final, p_inodo_dir, p_inodo, p_entrada, reservar, permisos);
-    }
-    
-    return EXITO;
+
+    }    
 }
+
+
 void mostrar_error_buscar_entrada(int error) {
-   switch (error) {
-   case -2: fprintf(stderr, "Error: Camino incorrecto.\n"); break;
-   case -3: fprintf(stderr, "Error: Permiso denegado de lectura.\n"); break;
-   case -4: fprintf(stderr, "Error: No existe el archivo o el directorio.\n"); break;
-   case -5: fprintf(stderr, "Error: No existe algún directorio intermedio.\n"); break;
-   case -6: fprintf(stderr, "Error: Permiso denegado de escritura.\n"); break;
-   case -7: fprintf(stderr, "Error: El archivo ya existe.\n"); break;
-   case -8: fprintf(stderr, "Error: No es un directorio.\n"); break;
-   }
+    switch (error) {
+    case ERROR_CAMINO_INCORRECTO:
+        fprintf(stderr, "\033[1;31mError: Camino incorrecto.\033[0m\n");
+        break;
+    case ERROR_PERMISO_LECTURA:
+        fprintf(stderr, "\033[1;31mError: Permiso denegado de lectura.\033[0m\n");
+        break;
+    case ERROR_NO_EXISTE_ENTRADA_CONSULTA:
+        fprintf(stderr, "\033[1;31mError: No existe el archivo o el directorio.\033[0m\n");
+        break;
+    case ERROR_NO_EXISTE_DIRECTORIO_INTERMEDIO:
+        fprintf(stderr, "\033[1;31mError: No existe algún directorio intermedio.\033[0m\n");
+        break;
+    case ERROR_PERMISO_ESCRITURA:
+        fprintf(stderr, "\033[1;31mError: Permiso denegado de escritura.\033[0m\n");
+        break;
+    case ERROR_ENTRADA_YA_EXISTENTE:
+        fprintf(stderr, "\033[1;31mError: El archivo ya existe.\033[0m\n");
+        break;
+    case ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO:
+        fprintf(stderr, "\033[1;31mError: No es un directorio.\033[0m\n");
+        break;
+    default:
+        fprintf(stderr, "\033[1;31mError desconocido.\033[0m\n");
+    }
 }
