@@ -1,8 +1,8 @@
 #include "ficheros_basico.h"
 
-#define DEBUG4 1 //Debug del nivel 4
-#define DEBUG5 1 //Debug del nivel 4
-#define DEBUG6 1 //Debug del nivel 6
+#define DEBUG4 0 //Debug del nivel 4
+#define DEBUG5 0 //Debug del nivel 4
+#define DEBUG6 0 //Debug del nivel 6
 
 int tamMB(unsigned int nbloques) {
     int tamMB = (nbloques / 8) / BLOCKSIZE;
