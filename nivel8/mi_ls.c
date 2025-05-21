@@ -47,6 +47,15 @@ int main(int argc, char **argv) {
     // Inicializar buffer
     memset(buffer, 0, sizeof(buffer));
 
+    // Consultar el tipo real usando mi_stat
+    struct STAT stat;
+    if (mi_stat(ruta, &stat) < 0) {
+        fprintf(stderr, RED"Error al obtener stat de la ruta\n"RESET);
+        bumount();
+        return FALLO;
+    }
+    tipo = stat.tipo;
+
     // Obtener listado
     int total = mi_dir(ruta, buffer, tipo);
     if (total < 0) {
