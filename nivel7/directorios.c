@@ -3,6 +3,7 @@
 
 #define NUM_ENTRADAS (BLOCKSIZE / sizeof(struct entrada))
 
+<<<<<<< HEAD
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     // Verificar que el camino comienza con '/'
     if (camino == NULL || camino[0] != '/') {
@@ -45,9 +46,54 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
     }
 
     return EXITO;
+=======
+//Obtiene primer directorio o fichero del path
+int extraer_camino(const char *camino, char *inicial, char *final, char *tipo){
+    const char bar = '/';
+    char *dir;
+    if (camino[0] != bar){
+        return ERROR_CAMINO_INCORRECTO; //El primer carácter no es el separador '/' o camino vacío
+    }
+
+    camino++;
+    dir = strchr(camino, bar);
+    if (dir != NULL){
+        strncpy(inicial,camino,(dir-camino));
+        camino = dir; 
+        strcpy(final,camino);
+        *tipo = 'd';
+    }
+    else{
+        strcpy(inicial,camino);
+        strcpy(final, "");
+        *tipo = 'f';
+    }
+    return EXITO;
 }
 
 
+int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir,
+    unsigned int *p_inodo, unsigned int *p_entrada,
+    char reservar, unsigned char permisos) {
+
+struct entrada entrada;
+struct inodo inodo_dir;
+char inicial[TAMNOMBRE];
+char resto[strlen(camino_parcial)];
+char tipo;
+unsigned int num_entrada = 0, num_entradas;
+int error;
+
+if (strcmp(camino_parcial, "/") == 0) {
+struct superbloque SB;
+return 0;
+>>>>>>> dbdbaa53d4cc0854bb85fab3ede3fa36a5ee9470
+}
+
+if ((error = extraer_camino(camino_parcial, inicial, resto, &tipo)) < 0)
+return ERROR_CAMINO_INCORRECTO;
+
+<<<<<<< HEAD
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir,
     unsigned int *p_inodo, unsigned int *p_entrada,
     char reservar, unsigned char permisos) {
@@ -68,6 +114,8 @@ return 0;
 if ((error = extraer_camino(camino_parcial, inicial, resto, &tipo)) < 0)
 return ERROR_CAMINO_INCORRECTO;
 
+=======
+>>>>>>> dbdbaa53d4cc0854bb85fab3ede3fa36a5ee9470
 printf("[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n", inicial, resto, reservar);
 
 if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1)
