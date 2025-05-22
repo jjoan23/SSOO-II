@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         leidos=mi_read(camino, buffer, offset, tam_buf);
     }
     
-    sprintf(string, "\ntotal_leidos %d\n", total_leidos);
+    printf( "\ntotal_leidos %d\n", total_leidos); //FALLA AQUI
     write(2, string, strlen(string));
 
     int res;
@@ -47,8 +47,6 @@ int main(int argc, char **argv) {
         return res;;
     }
     leer_inodo(p_inodo, &inodo);
-
-    sprintf(string, "tamEnBytesLog %d\n", inodo.tamEnBytesLog);
     write(2, string, strlen(string));
     
     bumount();

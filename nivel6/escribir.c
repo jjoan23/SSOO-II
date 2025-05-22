@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        fprintf(stderr, RED "Uso: %s <nombre_dispositivo> <\"texto\"> <diferentes_inodos>\n" RESET, argv[0]);
+        fprintf(stderr, RED"Sintaxis: escribir <nombre_dispositivo> <'$(cat fichero)'> <diferentes_inodos>\nOffsets: 9000, 209000, 30725000, 409605000, 480000000\nSi diferentes_inodos=0 se reserva un solo inodo para todos los offsets \033[0m \n"RESET);
         return FALLO;
     }
 

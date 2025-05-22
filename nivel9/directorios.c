@@ -1,5 +1,6 @@
 #include "directorios.h"
 #define DEBUGN7 0
+#define DEBUGN9 1
 
 struct UltimaEntrada UltimaEntradaEscritura;
 struct UltimaEntrada UltimaEntradaLectura;
@@ -296,6 +297,9 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     // Comprobar si la última entrada coincide con el camino
     if (strcmp(camino, UltimaEntradaEscritura.camino) == 0) {
         p_inodo = UltimaEntradaEscritura.p_inodo;
+        #if DEBUGN9
+            fprintf(stderr,CYAN"[mi_write() --> Utilizamos la caché de escritura en vez de llamar a buscar_entrada()]\n"RESET);
+        #endif
     } else {
         // Buscar la entrada para obtener el inodo
         error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 7);
@@ -304,6 +308,9 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
             return error;
         }
         // Actualizar la caché
+        #if DEBUGN9
+            fprintf(stderr,ORANGE"[mi_write() --> Actualizamos la caché de escritura]\n"RESET);
+        #endif
         strcpy(UltimaEntradaEscritura.camino, camino);
         UltimaEntradaEscritura.p_inodo = p_inodo;
     }
@@ -317,7 +324,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
 
     int escritos;
     if ((escritos = mi_write_f(p_inodo, buf, offset, nbytes)) < 0) {
-        fprintf(stderr, "mi_write()--> Error al escribir en el fichero\n");
+        fprintf(stderr, "Bytes escritos: 0\n");
         return FALLO;
     }
 
@@ -332,6 +339,9 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 
     // Comprobar si la última entrada coincide con el camino
     if (strcmp(UltimaEntradaLectura.camino, camino) == 0) {
+        #if DEBUGN9
+            fprintf(stderr,CYAN"[mi_read() --> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n"RESET);
+        #endif
         p_inodo = UltimaEntradaLectura.p_inodo;
     } else {
         // Buscar la entrada para obtener el inodo
@@ -341,6 +351,9 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
             return FALLO;
         }
         // Actualizar la caché
+         #if DEBUGN9
+            fprintf(stderr,ORANGE"[mi_read() --> Actualizamos la caché de escritura]\n"RESET);
+        #endif
         strncpy(UltimaEntradaLectura.camino, camino, sizeof(UltimaEntradaLectura.camino) - 1);
         UltimaEntradaLectura.camino[sizeof(UltimaEntradaLectura.camino) - 1] = '\0';
         UltimaEntradaLectura.p_inodo = p_inodo;

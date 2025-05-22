@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
     
 
     if ((escritos=mi_write(ruta_fichero, buffer, offset, nbytes))<0){
-        fprintf(stderr, "Error de escritura en el fichero\n");
         return FALLO;
     }
 

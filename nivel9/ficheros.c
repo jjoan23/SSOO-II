@@ -69,6 +69,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     // Actualizar el tamaño lógico del inodo si se escribió más allá del tamaño actual
     if (offset + nbytes > inodo.tamEnBytesLog) {
         inodo.tamEnBytesLog = offset + nbytes;
+
     }
 
     // Actualizar los tiempos del inodo

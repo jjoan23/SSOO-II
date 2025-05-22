@@ -38,65 +38,40 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 
     return 0;
 }
-int initMB() {
-    unsigned char bufferMB[BLOCKSIZE];
-    memset(bufferMB, 0, BLOCKSIZE); // Inicializamos el buffer a 0
-
-    // Cargar superbloque
-    struct superbloque SB;
-    if (bread(0, &SB) == FALLO) {
-        perror("Error leyendo el superbloque");
-        return FALLO;
+int initMB(){
+    
+    struct superbloque sb;
+    unsigned char buff[BLOCKSIZE];
+    
+    if (bread(posSB, &sb)==-1){
+        fprintf(stderr, "initMB()-->Error de lectura del superbloque\n");
+        return -1;
     }
-/* 
-    // Corregimos el cálculo de los metadatos
-    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 2; // Incluye superbloque
-    int bitsMetadatos = tamMetadatos;
-    int bytesMetadatos = bitsMetadatos / 8;
-    int restoBits = bitsMetadatos % 8;
+    
+    memset(buff,0,BLOCKSIZE); //ponemos a 0 todos los bits del buffer
 
-    int bloquesCompletos = bytesMetadatos / BLOCKSIZE;
-
-    for (int i = 0; i < bloquesCompletos; i++) {
-        memset(bufferMB, 255, BLOCKSIZE);
-        if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
-            perror("Error escribiendo bloque completo del MB");
-            return FALLO;
+    for(int i=sb.posPrimerBloqueMB;i<=sb.posUltimoBloqueMB+1;i++){
+        if(bwrite(i,buff)==-1){
+            fprintf(stderr, "initMB()-->Error de escritura en el mapa de bits");
+            return -1;
         }
+       
     }
 
-    // Último bloque parcial
-    memset(bufferMB, 0, BLOCKSIZE);
-    for (int i = 0; i < (bytesMetadatos % BLOCKSIZE); i++) {
-        bufferMB[i] = 255;
+    for (int i=posSB; i<=sb.posUltimoBloqueAI; i++){
+        escribir_bit(i,1);
+        sb.cantBloquesLibres--;
     }
 
-    if (restoBits > 0) {
-        bufferMB[bytesMetadatos % BLOCKSIZE] |= (uint8_t)(255 << (8 - restoBits));
-    }
-
-    if (bwrite(SB.posPrimerBloqueMB + bloquesCompletos, bufferMB) == FALLO) {
-        perror("Error escribiendo el último bloque parcial del MB");
-        return FALLO;
-    }
- */
-
-    
-
-    // Actualizar superbloque
-    int tamMetadatos = (SB.posUltimoBloqueAI - SB.posPrimerBloqueMB) + 2; // Incluye superbloque
-    for (size_t i = 0; i < tamMetadatos; i++)
-    {
-        escribir_bit(i, 1);
+    if(bwrite(posSB, &sb) == -1){
+        
+        fprintf(stderr, "initMB()-->ERROR, no se ha podido escribir el superbloque \n");
+        
+        return -1;
     }
     
-    SB.cantBloquesLibres -= tamMetadatos;
-    if (bwrite(0, &SB) == FALLO) {
-        perror("Error actualizando el superbloque");
-        return FALLO;
-    }
-
-    return EXITO;
+    
+    return 0;
 }
 
 int initAI() {
@@ -692,7 +667,7 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
         }
     }
 
-    #if DEBUGGER6
+    #if DEBUG6
         printf("[liberar_bloques_inodo()→ total bloques liberados: %d]\n", liberados);
     #endif
 

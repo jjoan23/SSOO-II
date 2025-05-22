@@ -37,7 +37,7 @@ echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/fic1\x1b[0m"
 ./mi_mkdir disco 6 /dir1/fic1
 echo
 echo -e "\x1B[38;2;17;245;120m./mi_escribir disco /dir1/fic1 hola1  256000\x1b[0m"
-./mi_escribir disco /dir1/fic1 hola1  256000
+./mi_escribir disco /dir1/fic1 hola1 256000
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_stat disco /dir1/fic1\x1b[0m"
 ./mi_stat disco /dir1/fic1
@@ -47,8 +47,8 @@ echo -e "\x1B[38;2;17;245;120m$ sleep 1 #esperamos un poco para observar los sel
 sleep 1 
 echo
 echo -e "\x1B[38;2;17;245;120m##############################################################\x1b[0m"
-echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir disco /dir1/fic1 hola2  5120 #no cambia tamenBytesLog pero sí mtime y ctime (ocupamos 1 bloque más)\x1b[0m"
-./mi_escribir disco /dir1/fic1 hola2  5120 
+echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir disco /dir1/fic1 hola2 5120 #no cambia tamenBytesLog pero sí mtime y ctime (ocupamos 1 bloque más)\x1b[0m"
+./mi_escribir disco /dir1/fic1 hola2 5120 
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_stat disco /dir1/fic1\x1b[0m"
 ./mi_stat disco /dir1/fic1
@@ -58,8 +58,8 @@ echo -e "\x1B[38;2;17;245;120m$ sleep 1 #esperamos un poco para observar los sel
 sleep 1 
 echo
 echo -e "\x1B[38;2;17;245;120m##############################################################\x1b[0m"
-echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir disco /dir1/fic1 hola3  5200 #mismo bloque que offset 5120, cambia mtime pero no ctime\x1b[0m"
-./mi_escribir disco /dir1/fic1 hola3  5200 
+echo -e "\x1B[38;2;17;245;120m$ ./mi_escribir disco /dir1/fic1 hola3 5200 #mismo bloque que offset 5120, cambia mtime pero no ctime\x1b[0m"
+./mi_escribir disco /dir1/fic1 hola3 5200 
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_stat disco /dir1/fic1\x1b[0m"
 ./mi_stat disco /dir1/fic1
