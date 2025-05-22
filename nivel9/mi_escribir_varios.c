@@ -41,7 +41,9 @@ int main(int argc, char **argv){
   mi_stat_f(ninodo, &stat);
   printf("stat.tamEnBytesLog=%d\n",stat.tamEnBytesLog);
   printf("stat.numBloquesOcupados=%d\n",stat.numBloquesOcupados);
+  
   */
+
 
   bumount();
 }
