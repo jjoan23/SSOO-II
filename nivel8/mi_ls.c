@@ -66,24 +66,15 @@ int main(int argc, char **argv) {
     // Mostrar resultados
     if (tipo == 'd') {
         if (total > 0) {
+            printf("Total: %d\n", total);
             if (extended) {
-                printf("Total: %d\n", total);
                 printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
                 printf("--------------------------------------------------------------------------------------------\n");
-            } else {
-                printf("Total: %d\n", total);
             }
         }
-    } else {
-        if (total > 0) {
-            if (extended) {
-                printf("Total: %d\n", total);
-                printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
-                printf("--------------------------------------------------------------------------------------------\n");
-            } else {
-                printf("Total: %d\n", total);
-            }
-        }
+    } else if (extended) {
+        printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
+        printf("--------------------------------------------------------------------------------------------\n");
     }
 
     // Imprimir buffer
@@ -96,4 +87,4 @@ int main(int argc, char **argv) {
     }
 
     return EXITO;
-}   
+}

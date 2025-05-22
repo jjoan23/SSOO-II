@@ -1,4 +1,3 @@
-
 #include "directorios.h"
 
 // Declaración de la función mi_chmod (la implementarás después)
@@ -6,7 +5,7 @@ int mi_chmod(const char *camino, unsigned char permisos);
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        fprintf(stderr, RED"Sintaxis: ./mi_chmod <nombre_dispositivo> <permisos> </ruta>\n"RESET);
+        fprintf(stderr, RED"Sintaxis: %s <disco> <permisos> </ruta>\n"RESET, argv[0]);
         return 1;
     }
 

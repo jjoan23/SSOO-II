@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        fprintf(stderr, RED"Sintaxis: %s <disco> <permisos> </ruta>\n"RESET, argv[0]);
+        fprintf(stderr, RED "Sintaxis: %s <disco> <permisos> </ruta>\n"RESET, argv[0]);
         return 1;
     }
 
@@ -15,8 +15,6 @@ int main(int argc, char **argv) {
 
     // Determinar si es directorio o fichero según si termina en '/'
     char *ruta = argv[3];
-    //size_t len = strlen(ruta);
-    //char tipo = (ruta[len - 1] == '/') ? 'd' : 'f';
 
     // Montar el disco
     if (bmount(argv[1]) < 0) {

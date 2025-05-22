@@ -39,14 +39,14 @@ echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/fic111   #Error: 
 ./mi_mkdir disco 6 /dir1/dir11/fic111  
 echo
 echo -e "\x1B[38;2;17;245;120m################################################################################\x1b[0m"
-echo -e "\x1B[38;2;17;245;120m./mi_chmod disco 2 /dir1/dir11/  #permiso escritura -w-\x1b[0m"
+echo -e "\x1B[38;2;17;245;120m./mi_mkdir disco 2 /dir1/dir11/  #permiso escritura -w-\x1b[0m"
 ./mi_chmod disco 2 /dir1/dir11/  
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/fic111   #Error: Permiso denegado de lectura.\x1b[0m"
 ./mi_mkdir disco 6 /dir1/dir11/fic111  
 echo
 echo -e "\x1B[38;2;17;245;120m################################################################################\x1b[0m"
-echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/   #permiso lectura/escritura: rw-\x1b[0m"
+echo -e "\x1B[38;2;17;245;120m$ ./mi_chmod disco 6 /dir1/dir11/   #permiso lectura/escritura: rw-\x1b[0m"
 ./mi_chmod disco 6 /dir1/dir11/   
 echo
 echo -e "\x1B[38;2;17;245;120m$ ./mi_mkdir disco 6 /dir1/dir11/fic111   #permiso lectura/escritura: rw-\x1b[0m"

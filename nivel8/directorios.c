@@ -44,21 +44,15 @@ if (strcmp(camino_parcial, "/") == 0) {
     return 0;
 }
 
-if ((error = extraer_camino(camino_parcial, inicial, resto, &tipo)) < 0){
-    return ERROR_CAMINO_INCORRECTO;
-}
+if ((error = extraer_camino(camino_parcial, inicial, resto, &tipo)) < 0)
+return ERROR_CAMINO_INCORRECTO;
 
-#if DEBUGN7
-    fprintf(stderr, GRAY"[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n"RESET, inicial, resto, reservar);
-#endif
+printf("[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n", inicial, resto, reservar);
 
-if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1){
-    return -1;
-}
+if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1)
+return -1;
 
-if (!(inodo_dir.permisos & 4)) {
-    return ERROR_PERMISO_LECTURA;
-}
+if (!(inodo_dir.permisos & 4)) return ERROR_PERMISO_LECTURA;
 
 num_entradas = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
 
@@ -108,16 +102,14 @@ strcpy(nueva.nombre, inicial);
 nueva.ninodo = reservar_inodo((tipo == 'd') ? 'd' : 'f', permisos);
 if (nueva.ninodo == -1) return -1;
 
-#if DEBUGN7
-    fprintf(stderr, GRAY"[buscar_entrada()→ reservado inodo %d tipo %c con permisos %d para %s]\n"RESET,
+printf("[buscar_entrada()→ reservado inodo %d tipo %c con permisos %d para %s]\n",
 nueva.ninodo, (tipo == 'd') ? 'd' : 'f', permisos, inicial);
-#endif
 
 if (mi_write_f(*p_inodo_dir, &nueva, num_entrada * sizeof(struct entrada), sizeof(struct entrada)) < 0)
 return -1;
-#if DEBUGN7
-    fprintf(stderr, GRAY"[buscar_entrada()→ creada entrada: %s, %d]\n"RESET, inicial, nueva.ninodo);
-#endif
+
+printf("[buscar_entrada()→ creada entrada: %s, %d]\n", inicial, nueva.ninodo);
+
 if (resto[0] == '\0' || strcmp(resto, "/") == 0) {
 *p_inodo = nueva.ninodo;
 *p_entrada = num_entrada;
@@ -272,16 +264,18 @@ int mi_chmod(const char *camino, unsigned char permisos) {
     return mi_chmod_f(p_inodo, permisos);
 }
 
-int mi_stat(const char *camino, struct STAT *p_stat){
-    unsigned int p_inodo_dir = 0, p_inodo, p_entrada;
+int mi_stat(const char *camino, struct STAT *p_stat) {
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+    int error;
 
-    int res;
-    
-    if ( (res = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 7)) < 0){
-        mostrar_error_buscar_entrada(res);
-        return res;;
-    } 
-
+    // Buscar la entrada
+    error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 7);
+    if (error < 0) {
+        mostrar_error_buscar_entrada(error);
+        return error;
+    }
     if (mi_stat_f(p_inodo, p_stat) < 0){
         fprintf(stderr, "mi_stat()--> Error al mostrar el nº de inodo");
         return -1;
