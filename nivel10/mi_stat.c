@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
     printf("ctime: %s", ctime(&stat.ctime));
     printf("btime: %s", ctime(&stat.btime));
     printf("nlinks: %u\n", stat.nlinks);
-    printf("tamEnBytesLog: %u\n", stat.tamEnBytesLog);
     printf("numBloquesOcupados: %u\n", stat.numBloquesOcupados);
 
     // Desmontar dispositivo

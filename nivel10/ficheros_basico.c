@@ -39,37 +39,37 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
     return 0;
 }
 int initMB(){
-    
     struct superbloque sb;
     unsigned char buff[BLOCKSIZE];
     
+    // Leer el superbloque
     if (bread(posSB, &sb)==-1){
         fprintf(stderr, "initMB()-->Error de lectura del superbloque\n");
         return -1;
     }
     
-    memset(buff,0,BLOCKSIZE); //ponemos a 0 todos los bits del buffer
+    // Inicializar el buffer a 0 (todos los bits a 0)
+    memset(buff,0,BLOCKSIZE);
 
-    for(int i=sb.posPrimerBloqueMB;i<=sb.posUltimoBloqueMB+1;i++){
-        if(bwrite(i,buff)==-1){
+    // Escribir bloques del mapa de bits (MB) a 0
+    for(int i=sb.posPrimerBloqueMB; i<=sb.posUltimoBloqueMB+1; i++){
+        if(bwrite(i, buff)==-1){
             fprintf(stderr, "initMB()-->Error de escritura en el mapa de bits");
             return -1;
         }
-       
     }
 
+    // Marcar como ocupados los bloques del superbloque, MB y AI en el mapa de bits
     for (int i=posSB; i<=sb.posUltimoBloqueAI; i++){
-        escribir_bit(i,1);
+        escribir_bit(i, 1);
         sb.cantBloquesLibres--;
     }
 
+    // Guardar el superbloque actualizado
     if(bwrite(posSB, &sb) == -1){
-        
         fprintf(stderr, "initMB()-->ERROR, no se ha podido escribir el superbloque \n");
-        
         return -1;
     }
-    
     
     return 0;
 }

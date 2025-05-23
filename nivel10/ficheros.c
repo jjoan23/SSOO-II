@@ -19,6 +19,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     unsigned char buf_bloque[BLOCKSIZE];
     unsigned int nbfisico;
     unsigned int bytes_escritos = 0;
+    int cambio_metadatos = 0; // Variable para indicar cambios en metadatos
 
     if (primerBL == ultimoBL) {
         // Caso: todo el rango de escritura está dentro de un único bloque lógico
@@ -69,12 +70,15 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     // Actualizar el tamaño lógico del inodo si se escribió más allá del tamaño actual
     if (offset + nbytes > inodo.tamEnBytesLog) {
         inodo.tamEnBytesLog = offset + nbytes;
-
+        cambio_metadatos = 1;
     }
 
-    // Actualizar los tiempos del inodo
+    // Si tu función traducir_bloque_inodo te indica que se reservó algún bloque nuevo, también pon cambio_metadatos = 1
+
     inodo.mtime = time(NULL);
-    inodo.ctime = time(NULL);
+    if (cambio_metadatos) {
+        inodo.ctime = time(NULL);
+    }
 
     // Guardar el inodo actualizado
     if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
