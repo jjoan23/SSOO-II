@@ -55,8 +55,18 @@ int main(int argc, char **argv) {
     }
     tipo = stat.tipo;
 
+    // Limpiar barra final si no es la raíz
+    // AIXO HO HAURIEM DE FER A MÉS ARXIUS
+    char ruta_limpia[1024];
+    strncpy(ruta_limpia, ruta, 1023);
+    ruta_limpia[1023] = '\0';
+    int len = strlen(ruta_limpia);
+    if (len > 1 && ruta_limpia[len-1] == '/') {
+        ruta_limpia[len-1] = '\0';
+    }
+
     // Obtener listado
-    int total = mi_dir(ruta, buffer, tipo);
+    int total = mi_dir(ruta_limpia, buffer, tipo);
     if (total < 0) {
         fprintf(stderr, RED"Error al listar el directorio/fichero\n"RESET);
         bumount();
