@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         leidos=mi_read(camino, buffer, offset, tam_buf);
     }
     
-    printf( "\ntotal_leidos %d\n", total_leidos); //FALLA AQUI
+    printf( "\n\ntotal_leidos %d", total_leidos);
     write(2, string, strlen(string));
 
     int res;

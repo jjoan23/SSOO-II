@@ -33,12 +33,10 @@ int main(int argc, char **argv) {
 
     int resultado = mi_unlink(ruta);
     if (resultado < 0) {
-        fprintf(stderr, "Error al borrar '%s'\n", ruta);
         bumount();
         return EXIT_FAILURE;
     }
 
-    printf("'%s' borrado correctamente.\n", ruta);
 
     bumount();
     return EXIT_SUCCESS;

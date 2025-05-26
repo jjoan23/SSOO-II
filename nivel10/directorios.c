@@ -1,6 +1,6 @@
 #include "directorios.h"
 #define DEBUGN7 0
-#define DEBUGN9 1
+#define DEBUGN9 0
 
 struct UltimaEntrada UltimaEntradaEscritura;
 struct UltimaEntrada UltimaEntradaLectura;
@@ -68,7 +68,6 @@ if (strcmp(inicial, entrada.nombre) == 0) {
 // Entrada encontrada
 if (resto[0] == '\0' || strcmp(resto, "/") == 0) {
  if (reservar) {
-     printf("Error: El archivo ya existe.\n");
      return ERROR_ENTRADA_YA_EXISTENTE;
  }
  *p_inodo = entrada.ninodo;
@@ -172,7 +171,7 @@ int mi_creat(const char *camino, unsigned char permisos) {
 
     return EXIT_SUCCESS;
 }
-int mi_dir(const char *camino, char *buffer, char tipo) {
+int mi_dir(const char *camino, char *buffer, char tipo, int extendido) {
     unsigned int p_inodo_dir = 0;
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
@@ -220,29 +219,31 @@ int mi_dir(const char *camino, char *buffer, char tipo) {
             return -1;
         }
 
-        // Formatear la línea de salida
-        sprintf(tmp, "%c\t", inodo_entrada.tipo);
-        strcat(buffer, tmp);
+        if (extendido) {
+            // Formatear la línea de salida extendida
+            sprintf(tmp, "%c\t", inodo_entrada.tipo);
+            strcat(buffer, tmp);
 
-        // Permisos
-        sprintf(tmp, "%c%c%c\t",
-            (inodo_entrada.permisos & 4) ? 'r' : '-',
-            (inodo_entrada.permisos & 2) ? 'w' : '-',
-            (inodo_entrada.permisos & 1) ? 'x' : '-');
-        strcat(buffer, tmp);
+            // Permisos
+            sprintf(tmp, "%c%c%c\t",
+                (inodo_entrada.permisos & 4) ? 'r' : '-',
+                (inodo_entrada.permisos & 2) ? 'w' : '-',
+                (inodo_entrada.permisos & 1) ? 'x' : '-');
+            strcat(buffer, tmp);
 
-        // Fecha
-        tm = localtime(&inodo_entrada.mtime);
-        sprintf(tmp, "%d-%02d-%02d %02d:%02d:%02d\t",
-            tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-            tm->tm_hour, tm->tm_min, tm->tm_sec);
-        strcat(buffer, tmp);
+            // Fecha
+            tm = localtime(&inodo_entrada.mtime);
+            sprintf(tmp, "%d-%02d-%02d %02d:%02d:%02d\t",
+                tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+                tm->tm_hour, tm->tm_min, tm->tm_sec);
+            strcat(buffer, tmp);
 
-        // Tamaño
-        sprintf(tmp, "%d\t", inodo_entrada.tamEnBytesLog);
-        strcat(buffer, tmp);
+            // Tamaño
+            sprintf(tmp, "%d\t", inodo_entrada.tamEnBytesLog);
+            strcat(buffer, tmp);
+        }
 
-        // Nombre
+        // Nombre (siempre)
         sprintf(tmp, "%s\n", entrada.nombre);
         strcat(buffer, tmp);
 
@@ -432,7 +433,7 @@ int mi_unlink(const char *camino) {
 
     // Si es un directorio y no está vacío, no se puede borrar
     if (inodo.tipo == 'd' && inodo.tamEnBytesLog > 0) {
-        fprintf(stderr, "Error: El directorio no está vacío.\n");
+        fprintf(stderr, RED"Error: El directorio no está vacío.\n"RESET);
         return FALLO;
     }
 

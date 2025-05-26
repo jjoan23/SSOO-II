@@ -21,7 +21,6 @@ int main(int argc, char **argv) {
     // Comprobar que la ruta original es un fichero
     struct STAT stat;
     if (mi_stat(ruta_original, &stat) < 0) {
-        fprintf(stderr, "Error: El fichero original no existe o no se puede acceder\n");
         bumount();
         return EXIT_FAILURE;
     }
@@ -34,12 +33,9 @@ int main(int argc, char **argv) {
     // Intentar crear el enlace
     int resultado = mi_link(ruta_original, ruta_enlace);
     if (resultado < 0) {
-        fprintf(stderr, "Error al crear el enlace\n");
         bumount();
         return EXIT_FAILURE;
     }
-
-    printf("Enlace creado correctamente.\n");
 
     bumount();
     return EXIT_SUCCESS;

@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     }
 
     // Obtener listado
-    int total = mi_dir(ruta_limpia, buffer, tipo);
+    int total = mi_dir(ruta_limpia, buffer, tipo, extended); // <-- Añadido el parámetro 'extended'
     if (total < 0) {
         fprintf(stderr, RED"Error al listar el directorio/fichero\n"RESET);
         bumount();
@@ -82,10 +82,11 @@ int main(int argc, char **argv) {
                 printf("--------------------------------------------------------------------------------------------\n");
             }
         }
-    } else if (extended) {
-        printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
-        printf("--------------------------------------------------------------------------------------------\n");
-    }
+        else if (total == 0){
+                        printf("Total: %d\n", total);
+
+        }
+    } 
 
     // Imprimir buffer
     printf("%s", buffer);

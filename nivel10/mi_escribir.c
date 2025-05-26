@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
         return FALLO;
     }
 
-    printf("Bytes escritos: %d\n\n",escritos);
+    printf("Bytes escritos: %d\n",escritos);
     
     bumount();
     
