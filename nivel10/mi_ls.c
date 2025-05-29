@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     tipo = stat.tipo;
 
   
+
     // Obtener listado
     int total = mi_dir(ruta, buffer, tipo, extended); // <-- Añadido el parámetro 'extended'
     if (total < 0) {
@@ -77,7 +78,13 @@ int main(int argc, char **argv) {
                         printf("Total: %d\n", total);
 
         }
-    } 
+    } else{
+                printf("Total: %d\n", total);   
+                printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
+                
+                printf("--------------------------------------------------------------------------------------------\n");
+                
+            }
 
     // Imprimir buffer
     printf("%s", buffer);
