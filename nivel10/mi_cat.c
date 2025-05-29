@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     int tam_buf = 1500*BLOCKSIZE;
     char buffer[tam_buf];
     int offset;
-    char string[128];
+    
     
     if (argc != 3){
         fprintf(stderr, "Error. Sintaxis correcta: mi_cat <disco> </ruta_fichero>\n");
@@ -36,8 +36,7 @@ int main(int argc, char **argv) {
         leidos=mi_read(camino, buffer, offset, tam_buf);
     }
     
-    printf( "\n\ntotal_leidos %d", total_leidos);
-    write(2, string, strlen(string));
+    fprintf(stderr, "\n\ntotal_leidos %d\n", total_leidos);
 
     int res;
     unsigned int p_inodo_dir = 0, p_inodo, p_entrada;
@@ -47,7 +46,6 @@ int main(int argc, char **argv) {
         return res;;
     }
     leer_inodo(p_inodo, &inodo);
-    write(2, string, strlen(string));
     
     bumount();
     

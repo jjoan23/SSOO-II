@@ -7,7 +7,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     // Comprobar permisos de escritura
     if ((inodo.permisos & 2) != 2) {
-        fprintf(stderr, CYAN"No hay permisos de escritura\n"RESET);
+        fprintf(stderr, RED"No hay permisos de escritura\n"RESET);
         return FALLO;
     }
 

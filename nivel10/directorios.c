@@ -50,7 +50,7 @@ if (strcmp(camino_parcial, "/") == 0) {
 if ((error = extraer_camino(camino_parcial, inicial, resto, &tipo)) < 0)
 return ERROR_CAMINO_INCORRECTO;
 #if DEBUGN7
-    fprintf(stderr, GREY "[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n"RESET, inicial, resto, reservar);
+    fprintf(stderr, GRAY "[buscar_entrada()→ inicial: %s, final: %s, reservar: %d]\n"RESET, inicial, resto, reservar);
 #endif
 if (leer_inodo(*p_inodo_dir, &inodo_dir) == -1)
 return -1;
@@ -105,13 +105,13 @@ nueva.ninodo = reservar_inodo((tipo == 'd') ? 'd' : 'f', permisos);
 if (nueva.ninodo == -1) return -1;
 
 #if DEBUGN7
-    fprintf(stderr, GREY"[buscar_entrada()→ reservado inodo %d tipo %c con permisos %d para %s]\n"RESET, nueva.ninodo, (tipo == 'd') ? 'd' : 'f', permisos, inicial);
+    fprintf(stderr, GRAY"[buscar_entrada()→ reservado inodo %d tipo %c con permisos %d para %s]\n"RESET, nueva.ninodo, (tipo == 'd') ? 'd' : 'f', permisos, inicial);
 #endif
 
 if (mi_write_f(*p_inodo_dir, &nueva, num_entrada * sizeof(struct entrada), sizeof(struct entrada)) < 0)
 return -1;
 #if DEBUGN7
-    fprintf(stderr, GREY"[buscar_entrada()→ creada entrada: %s, %d]\n"RESET, inicial, nueva.ninodo);
+    fprintf(stderr, GRAY"[buscar_entrada()→ creada entrada: %s, %d]\n"RESET, inicial, nueva.ninodo);
 #endif
 
 if (resto[0] == '\0' || strcmp(resto, "/") == 0) {
@@ -433,7 +433,7 @@ int mi_unlink(const char *camino) {
 
     // Si es un directorio y no está vacío, no se puede borrar
     if (inodo.tipo == 'd' && inodo.tamEnBytesLog > 0) {
-        fprintf(stderr, RED"Error: El directorio no está vacío.\n"RESET);
+        fprintf(stderr, RED"Error: El directorio %s no está vacío.\n"RESET, camino);
         return FALLO;
     }
 
