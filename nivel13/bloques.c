@@ -22,8 +22,6 @@ int bmount(const char *camino){
     if (!mutex) {
         mutex = initSem();
         if (mutex == SEM_FAILED) {
-            close(descriptor);
-            descriptor = 0;
             return FALLO;
         }
     }
@@ -37,12 +35,10 @@ int bumount() {
         perror("");
         return FALLO;
     }
-    descriptor = 0;
 
     // Eliminar el semáforo
     deleteSem();
-    mutex = NULL;
-    inside_sc = 0;
+    
 
     return EXITO;
 }
