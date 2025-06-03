@@ -1,4 +1,6 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
 //verificacion.h
+//cabecera de la verificación de la simulación
 #include "simulacion.h"
 
 

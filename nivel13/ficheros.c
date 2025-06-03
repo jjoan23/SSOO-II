@@ -1,5 +1,8 @@
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//ficheros.c : implementación de las funciones de acceso a ficheros del sistema de ficheros
 #include "ficheros.h"
 
+// Escribe datos en un inodo a partir de un offset dado, reservando bloques si es necesario
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     unsigned int primerBL = offset / BLOCKSIZE;
     unsigned int ultimoBL = (offset + nbytes - 1) / BLOCKSIZE;
@@ -12,17 +15,18 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     int cambio_metadatos = 0;
     struct inodo inodo;
 
-    // Leer inodo sin semáforo
+    // Leer el inodo para verificar permisos y acceder a sus campos
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
+    // Comprobar permisos de escritura
     if ((inodo.permisos & 2) != 2) {
         fprintf(stderr, RED"No hay permisos de escritura\n"RESET);
         return FALLO;
     }
 
     if (primerBL == ultimoBL) {
-        // Un solo bloque
-        mi_waitSem(); // traduce y reserva si hace falta
+        // Escritura en un único bloque
+        mi_waitSem();
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
         mi_signalSem();
         if (nbfisico == FALLO) return FALLO;
@@ -33,7 +37,9 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         bytes_escritos += nbytes;
     } else {
-        // Primer bloque
+        // Escritura que abarca múltiples bloques
+
+        // Primer bloque (parcial)
         mi_waitSem();
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
         mi_signalSem();
@@ -44,7 +50,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         if (bwrite(nbfisico, buf_bloque) == FALLO) return FALLO;
         bytes_escritos += BLOCKSIZE - desp1;
 
-        // Bloques intermedios
+        // Bloques intermedios (completos)
         for (unsigned int bl = primerBL + 1; bl < ultimoBL; bl++) {
             mi_waitSem();
             nbfisico = traducir_bloque_inodo(ninodo, bl, 1);
@@ -55,7 +61,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             bytes_escritos += BLOCKSIZE;
         }
 
-        // Último bloque
+        // Último bloque (parcial)
         mi_waitSem();
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 1);
         mi_signalSem();
@@ -67,7 +73,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         bytes_escritos += desp2 + 1;
     }
 
-    // Sección crítica final para actualizar metadatos del inodo
+    // Actualización de metadatos del inodo
     mi_waitSem();
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         mi_signalSem();
@@ -87,12 +93,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         return FALLO;
     }
 
-    mi_signalSem(); // FIN sección crítica de metadatos
-
+    mi_signalSem();
     return bytes_escritos;
 }
 
-
+// Lee datos de un inodo desde un offset dado, hasta un número de bytes
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
     unsigned int primerBL = offset / BLOCKSIZE;
     unsigned int ultimoBL = (offset + nbytes - 1) / BLOCKSIZE;
@@ -103,25 +108,22 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     unsigned int nbfisico;
     unsigned int bytes_leidos = 0;
 
-    // Leer inodo sin semáforo (no lo modificamos aún)
+    // Leer inodo para comprobar permisos y tamaño lógico
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
-    // Comprobar permisos de lectura
     if ((inodo.permisos & 4) != 4) {
         fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
         return FALLO;
     }
 
-    // Si el offset está fuera del tamaño lógico, no hay nada que leer
-    if (offset >= inodo.tamEnBytesLog) return 0;
+    if (offset >= inodo.tamEnBytesLog) return EXITO;
 
-    // Ajustar nbytes si excede el tamaño lógico del inodo
     if (offset + nbytes > inodo.tamEnBytesLog) {
         nbytes = inodo.tamEnBytesLog - offset;
     }
 
     if (primerBL == ultimoBL) {
-        // Todo en un solo bloque
+        // Lectura dentro del mismo bloque
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
         if (nbfisico != FALLO) {
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
@@ -129,7 +131,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
         bytes_leidos += nbytes;
     } else {
-        // Primer bloque
+        // Primer bloque (parcial)
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
         if (nbfisico != FALLO) {
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
@@ -137,7 +139,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
         bytes_leidos += BLOCKSIZE - desp1;
 
-        // Intermedios
+        // Bloques intermedios (completos)
         for (unsigned int bl = primerBL + 1; bl < ultimoBL; bl++) {
             nbfisico = traducir_bloque_inodo(ninodo, bl, 0);
             if (nbfisico != FALLO) {
@@ -146,7 +148,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
             bytes_leidos += BLOCKSIZE;
         }
 
-        // Último bloque
+        // Último bloque (parcial)
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 0);
         if (nbfisico != FALLO) {
             if (bread(nbfisico, buf_bloque) == FALLO) return FALLO;
@@ -155,7 +157,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         bytes_leidos += desp2 + 1;
     }
 
-    // Sección crítica: solo para actualizar atime
+    // Actualizar atime (último acceso)
     mi_waitSem();
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         mi_signalSem();
@@ -172,19 +174,18 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     return bytes_leidos;
 }
 
-
+// Rellena una estructura STAT con los metadatos de un inodo
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
 
+    // Copiar campos del inodo a la estructura STAT
     p_stat->tipo = inodo.tipo;
     p_stat->permisos = inodo.permisos;
-
     p_stat->atime = inodo.atime;
     p_stat->ctime = inodo.ctime;
     p_stat->mtime = inodo.mtime;
     p_stat->btime = inodo.btime;
-
     p_stat->nlinks = inodo.nlinks;
     p_stat->tamEnBytesLog = inodo.tamEnBytesLog;
     p_stat->numBloquesOcupados = inodo.numBloquesOcupados;
@@ -192,15 +193,16 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
     return EXITO;
 }
 
+// Cambia los permisos de un inodo
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos) {
-    mi_waitSem(); // INICIO sección crítica
-
+    mi_waitSem();
     struct inodo inodo;
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         mi_signalSem();
         return FALLO;
     }
 
+    // Cambiar los permisos y actualizar ctime
     inodo.permisos = permisos;
     inodo.ctime = time(NULL);
 
@@ -209,48 +211,38 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos) {
         return FALLO;
     }
 
-    mi_signalSem(); // FIN sección crítica
+    mi_signalSem();
     return EXITO;
 }
 
+// Trunca un inodo a un número de bytes determinado
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
-    
-
-    //Leemos inodo
     struct inodo inodo;
     if(leer_inodo(ninodo, &inodo) == -1) {
         return FALLO;
     }
 
-    //Comprobamos que el inodo tenga permisos de escritura
     if((inodo.permisos & 2) != 2) {
         fprintf(stderr,RED "No tiene permiso de escritura.\n"RESET);
         return FALLO;
     }
 
-    //Comprobamos que no se trunquen mas allá del tamaño de bytes lógicos
     if(nbytes > inodo.tamEnBytesLog) {
         return FALLO;
     }
 
-    //Obtenemos el bloque lógico
-    int primerBL;
-    if(nbytes % BLOCKSIZE == 0) {
-        primerBL = nbytes / BLOCKSIZE;
-    } else {
-        primerBL = (nbytes / BLOCKSIZE) + 1;
-    }
+    // Calcular el primer bloque lógico a liberar
+    int primerBL = (nbytes % BLOCKSIZE == 0) ? nbytes / BLOCKSIZE : (nbytes / BLOCKSIZE) + 1;
 
-    //Liberamos bloques
+    // Liberar bloques desde primerBL
     int liberados = liberar_bloques_inodo(primerBL, &inodo);
 
-    //Actulizamos información
+    // Actualizar metadatos
     inodo.mtime = time(NULL);
     inodo.ctime = time(NULL);
     inodo.tamEnBytesLog = nbytes;
     inodo.numBloquesOcupados -= liberados;
 
-    //Guardamos inodo
     if(escribir_inodo(ninodo, &inodo) == -1) {
         return FALLO;
     }

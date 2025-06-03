@@ -1,4 +1,5 @@
-// verificacion.c
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//verificacion.c: programa que verifica los registros de escritura de varios procesos en un sistema de archivos simulado.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,12 +13,12 @@
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Uso: %s <disco> <directorio_simulacion>\n", argv[0]);
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     if (bmount(argv[1]) < 0) {
         perror("bmount");
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     char *dir_sim = argv[2];
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
     if (mi_stat(dir_sim, &stat) < 0) {
         fprintf(stderr, "Error al obtener stat de %s\n", dir_sim);
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     int numentradas = stat.tamEnBytesLog / sizeof(struct entrada);
@@ -35,7 +36,7 @@ int main(int argc, char *argv[]) {
     if (numentradas != NUMPROCESOS) {
         fprintf(stderr, "ERROR: numentradas != NUMPROCESOS\n");
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     char path_informe[300];
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
     if (mi_creat(path_informe, 6) < 0) {
         fprintf(stderr, "Error al crear informe.txt\n");
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     struct entrada entradas[NUMPROCESOS];
@@ -107,5 +108,5 @@ int main(int argc, char *argv[]) {
     }
 
     bumount();
-    return EXIT_SUCCESS;
+    return EXITO;
 }

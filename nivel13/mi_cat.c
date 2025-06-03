@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_cat.c: Muestra el contenido de un fichero en el disco virtual
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +16,7 @@ int main(int argc, char **argv) {
     
     if (argc != 3){
         fprintf(stderr, "Error. Sintaxis correcta: mi_cat <disco> </ruta_fichero>\n");
-        return -1;
+        return FALLO;
     }
     
     char *disco = argv[1];
@@ -49,5 +51,5 @@ int main(int argc, char **argv) {
     
     bumount();
     
-    return 0;
+    return EXITO;
 }

@@ -1,5 +1,5 @@
-/* semaforo_mutex_posix.c */
-
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//semaforo_mutex_posix.c: implementación de semáforos POSIX para MUTEX con "semáforos con nombre" (named)
 #include "semaforo_mutex_posix.h"
 
 

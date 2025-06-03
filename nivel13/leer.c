@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//leer.c: Programa que lee un fichero de un dispositivo montado y muestra su contenido por la salida estándar.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

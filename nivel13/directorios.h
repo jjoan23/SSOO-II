@@ -1,5 +1,8 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//directorios.h 
+//Fichero de cabecera para la gestión de directorios  en un dispositivo
 #include "ficheros.h" 
-
+//Errores de la función buscar_entrada
 #define ERROR_CAMINO_INCORRECTO (-2)
 #define ERROR_PERMISO_LECTURA (-3)
 #define ERROR_NO_EXISTE_ENTRADA_CONSULTA (-4)
@@ -18,7 +21,7 @@ struct UltimaEntrada{
     char camino [512];
     int p_inodo;
 };
-
+//Funciones de directorios.c
 int extraer_camino(const char *camino, char *inicial, char *final, char *tipo);
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos);
 void mostrar_error_buscar_entrada(int error);

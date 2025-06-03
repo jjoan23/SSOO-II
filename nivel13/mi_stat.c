@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_stat.c: programa que muestra el estado de un fichero o directorio en un sistema de ficheros FUSE.
 #include "directorios.h"
 #include <time.h>
 

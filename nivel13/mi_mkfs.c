@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_mkfs.c: Programa para crear un sistema de ficheros en un fichero dado
 #include "directorios.h"
 
 

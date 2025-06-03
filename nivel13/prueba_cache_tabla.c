@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//prueba_cache_tabla.c: programa de prueba para la caché de tabla de inodos
 #include "directorios.h"
 
 int main(int argc, char **argv){

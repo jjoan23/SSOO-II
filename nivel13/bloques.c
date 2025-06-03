@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//bloques.c: Implementación de funciones para manejar bloques en un dispositivo
 #include "bloques.h"
 #include "semaforo_mutex_posix.h"
 #include <fcntl.h>

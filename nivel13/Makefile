@@ -1,3 +1,5 @@
+#AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+#Makefile
 CC=gcc
 CFLAGS=-c -g -Wall -std=gnu99
 LDFLAGS=-pthread

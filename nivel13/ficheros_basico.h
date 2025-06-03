@@ -1,9 +1,12 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//fichero_basico.h 
+//Fichero que define las estructuras de datos y funciones básicas para el sistema de ficheros
 #include <limits.h>
 #include "bloques.h"
 #include <stdint.h>
 #include <time.h>
 
-#define posSB 0 // el superbloque se escribe en el primer bloque de nuestro FS
+#define posSB 0
 #define tamSB 1
 #define INODOSIZE 128 // tamaño en bytes de un inodo
 
@@ -35,11 +38,7 @@ struct superbloque {
     unsigned char permisos; // Permisos (lectura y/o escritura y/o ejecución)
  
  
-    /* Por cuestiones internas de alineación de estructuras, si se está utilizando
-     un tamaño de palabra de 4 bytes (microprocesadores de 32 bits):
-    unsigned char reservado_alineacion1 [2];
-    en caso de que la palabra utilizada sea del tamaño de 8 bytes
-    (microprocesadores de 64 bits): unsigned char reservado_alineacion1 [6]; */
+    
     unsigned char reservado_alineacion1[6];
  
  
@@ -49,8 +48,7 @@ struct superbloque {
     time_t btime; // Fecha y hora de creación del inodo (birth)
  
  
-    /* comprobar que el tamaño del tipo time_t para vuestra plataforma/compilador es 8:
-    printf ("sizeof time_t is: %ld\n", sizeof(time_t)); */
+    
  
  
     unsigned int nlinks;             // Cantidad de enlaces de entradas en directorio

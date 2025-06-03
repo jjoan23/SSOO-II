@@ -1,11 +1,13 @@
-// bloques.h
-#include <stdio.h>  //printf(), fprintf(), stderr, stdout, stdin
-#include <fcntl.h> //O_WRONLY, O_CREAT, O_TRUNC
-#include <sys/stat.h> //S_IRUSR, S_IWUSR
-#include <stdlib.h>  //exit(), EXIT_SUCCESS, EXIT_FAILURE, atoi()
-#include <unistd.h> // SEEK_SET, read(), write(), open(), close(), lseek()
-#include <errno.h>  //errno
-#include <string.h> // strerror()
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//bloques.h
+//Fichero de cabecera para la gestión de bloques en un dispositivo
+#include <stdio.h>  
+#include <fcntl.h> 
+#include <sys/stat.h> 
+#include <stdlib.h>  
+#include <unistd.h> 
+#include <errno.h>  
+#include <string.h> 
 
 
 #define BLOCKSIZE 1024 // bytes
@@ -14,7 +16,7 @@
 #define EXITO 0 //para gestión errores
 #define FALLO -1 //para gestión errores
 
-
+//Colores para debugging
 #define BLACK      "\x1B[30m"
 #define RED           "\x1b[31m"
 #define GREEN      "\x1b[32m"
@@ -33,12 +35,12 @@
 
 #define NEGRITA "\x1b[1m"
 
-
+//Funciones de bloques.c
 int bmount(const char *camino);
 int bumount();
 int bwrite(unsigned int nbloque, const void *buf);
 int bread(unsigned int nbloque, void *buf);
 
-// Declaración de funciones de semáforo
+// Declaración de funciones de semáforo del nivel 11
 void mi_waitSem(void);
 void mi_signalSem(void);

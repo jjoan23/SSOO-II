@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_escribir_varios.c: programa que escribe varias veces un texto en un fichero de un dispositivo
 #include "directorios.h"
 
 
@@ -12,7 +14,7 @@ int main(int argc, char **argv){
   //struct STAT stat;
 
   //montamos el dispositivo
-  if(bmount(argv[1])<0) return -1;
+  if(bmount(argv[1])<0) return FALLO;
   //obtenemos el texto y su longitud
   char *buffer_texto = argv[3];
   int longitud=strlen(buffer_texto);

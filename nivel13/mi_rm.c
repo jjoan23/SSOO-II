@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_rm.c: programa que borra ficheros o directorios vacíos en un sistema de ficheros simulado.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +17,7 @@
 int main(int argc, char **argv) {
     if (argc != 3) {
         fprintf(stderr, "Sintaxis: %s <disco> </ruta>\n", argv[0]);
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     char *nombre_disco = argv[1];
@@ -23,21 +25,21 @@ int main(int argc, char **argv) {
 
     if (strcmp(ruta, "/") == 0) {
         fprintf(stderr, "Error: No se puede borrar el directorio raíz.\n");
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     if (bmount(nombre_disco) == -1) {
         perror("Error montando el disco");
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     int resultado = mi_unlink(ruta);
     if (resultado < 0) {
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
 
     bumount();
-    return EXIT_SUCCESS;
+    return EXITO;
 }

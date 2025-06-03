@@ -1,8 +1,11 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//escribir.c: Implementación de la función escribir que escribe un texto en diferentes offsets de un inodo en un sistema de ficheros simulado.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "ficheros.h" // Asegúrate de incluir el archivo de cabecera adecuado
+#include "ficheros.h" 
 
 #define NUM_OFFSETS 5
 
@@ -23,7 +26,7 @@ int main(int argc, char **argv) {
 
     // Montar el dispositivo
     if (bmount(nombre_dispositivo) < 0) {
-        perror("Error al montar el dispositivo");
+        perror("");
         return FALLO;
     }
 
@@ -36,7 +39,7 @@ int main(int argc, char **argv) {
             // Reservar un nuevo inodo si diferentes_inodos = 1 o si es el primer inodo
             ninodo = reservar_inodo('f', 6);
             if (ninodo < 0) {
-                perror("Error al reservar inodo");
+                perror("");
                 bumount();
                 return FALLO;
             }
@@ -46,7 +49,7 @@ int main(int argc, char **argv) {
         // Escribir el texto en el offset correspondiente
         int escritos = mi_write_f(ninodo, texto, offsets[i], tam_texto);
         if (escritos < 0) {
-            perror("Error al escribir en el fichero");
+            perror("");
             bumount();
             return FALLO;
         }
@@ -57,7 +60,7 @@ int main(int argc, char **argv) {
         // Obtener información del inodo
         struct STAT stat;
         if (mi_stat_f(ninodo, &stat) < 0) {
-            perror("Error al obtener información del inodo");
+            perror("");
             bumount();
             return FALLO;
         }

@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_escribir.c: programa que escribe un texto en un fichero de un disco virtual
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

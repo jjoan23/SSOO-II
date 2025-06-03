@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//mi_ls.c: programa que lista el contenido de un directorio o fichero en un sistema de ficheros simulado
 #include "directorios.h"
 
 #define TAMFILA 100

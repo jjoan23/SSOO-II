@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//permitir.c: programa que permite cambiar los permisos de un inodo en un sistema de ficheros montado.
 #include <stdio.h>
 #include <stdlib.h>
 #include "bloques.h" // Asegúrate de que esta cabecera contiene las funciones necesarias para montar/desmontar

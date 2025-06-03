@@ -1,4 +1,5 @@
-// simulacion.c
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//simulacion.c: Simulación de escritura concurrente en un sistema de archivos
 #define DEBUG12 0
 #define DEBUG120 1
 #include <stdio.h>
@@ -31,14 +32,14 @@ int main(int argc, char *argv[]) {
     #if DEBUG12
         fprintf(stderr, "Uso: %s <disco>\n", argv[0]);
     #endif
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     if (bmount(argv[1]) < 0) {
     #if DEBUG12
-        perror("bmount");
+        perror("");
     #endif
-        return EXIT_FAILURE;
+        return FALLO;
     }
 
     
@@ -52,7 +53,7 @@ int main(int argc, char *argv[]) {
 
     if (mi_creat(nombre_dir, 7) < 0) {
         bumount();
-        return EXIT_FAILURE;
+        return FALLO;
     }
     #if DEBUG12
         printf("%s\n", nombre_dir);
@@ -65,25 +66,24 @@ int main(int argc, char *argv[]) {
 
         if (pid == 0) {
             int num_pid = getpid();
-            if (bmount(argv[1]) < 0) exit(EXIT_FAILURE);
+            if (bmount(argv[1]) < 0) exit(FALLO);
 
             // Añadir / antes y después del proceso
             sprintf(nombre_pid,"%sproceso_%d/", nombre_dir, num_pid);
             if (mi_creat(nombre_pid, 7) < 0) {
                 fprintf(stderr, "Error al crear directorio %s\n", nombre_pid);
-                exit(EXIT_FAILURE);
+                exit(FALLO);
             }
 
             // El archivo va dentro del directorio del proceso
             sprintf(nombre_fichero,"%sprueba.dat", nombre_pid);
             if (mi_creat(nombre_fichero, 7) < 0) {
                 fprintf(stderr, "Error al crear archivo %s\n", nombre_fichero);
-                exit(EXIT_FAILURE);
+                exit(FALLO);
             }
             
             srand(time(NULL) + getpid());
             struct REGISTRO reg;
-
             for (int j = 0; j < NUMESCRITURAS; j++) {
                 reg.fecha = time(NULL);
                 reg.pid = getpid();

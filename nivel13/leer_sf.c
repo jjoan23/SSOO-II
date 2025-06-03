@@ -1,3 +1,5 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//leer_sf.c: Implementación de un programa que lee el superbloque de un sistema de ficheros y muestra su contenido.
 #include "directorios.h"
 #define DEBUGSTRUCT 0
 #define DEBUGN1 0
@@ -24,13 +26,13 @@ int main(int argc, char *argv[]){
     if(argc == 2){ //Comprobamso sintaxis
         if(bmount(argv[1]) == -1){ //MOntamos el disco
             fprintf(stderr, "Error al montar el dispositivo\n");
-            return -1;
+            return FALLO;
         }
 
         struct superbloque SB;
         if(bread(posSB,&SB) == -1){ //Leemos el superbloque del disco
             fprintf(stderr, "Error al leer el superbloque\n");
-            return -1;
+            return FALLO;
         }
         
 
@@ -60,7 +62,7 @@ int main(int argc, char *argv[]){
             for(int i = SB.posPrimerBloqueAI; i<= SB.posUltimoBloqueAI; i++){ //Recorremos toda la lista enlazada
                 if(bread(i, &inodos) == -1){
                     fprintf(stderr,"Error al leer el bloque de inodos\n");
-                    return -1;
+                    return FALLO;
                 }
                 for(int i = 0; i<(BLOCKSIZE/INODOSIZE);i++){
                     printf("%i ", inodos[i].punterosDirectos[0]);
@@ -79,7 +81,7 @@ int main(int argc, char *argv[]){
             liberar_bloque(reserva); //LIberamos el bloque anterior
             if(bread(posSB, &SB) == -1){ //Leemos el superbloque
                 fprintf(stderr, "Error al leer el superbloque\n");
-                return -1;
+                return FALLO;
             }
             printf("Liberamos ese bloque y despues SB.cantBloquesLibres = %i\n", SB.cantBloquesLibres);
 
@@ -137,7 +139,7 @@ int main(int argc, char *argv[]){
             int inodo = reservar_inodo('f',6);
             if(inodo == -1){
                 fprintf(stderr, "Error al reservar inodo\n");
-                return -1;
+                return FALLO;
             }
 
             struct inodo inodoReservado;
@@ -200,12 +202,12 @@ int main(int argc, char *argv[]){
         #endif
         if(bumount()){ //Desmontamos el disco
             fprintf(stderr, "Error al desmontar el dispositivo\n");
-            return -1;
+            return FALLO;
         }
 
     }else{
         fprintf(stderr, "Error de sintaxis: ./leer_sf <nombre_dispositivo> \n");
-        return -1;
+        return FALLO;
     }
 
 }

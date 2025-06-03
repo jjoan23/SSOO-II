@@ -1,3 +1,6 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//simulacion.h
+//cabecera del módulo de simulación de escrituras concurrentes
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>

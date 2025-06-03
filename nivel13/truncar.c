@@ -1,8 +1,10 @@
+//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+//truncar.c: programa que trunca un fichero a un tamaño determinado o lo libera si se le pasa 0 como tamaño.
 #include "ficheros.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h> // Asegúrate de incluir esta librería para manejar las fechas
+#include <time.h> 
 
 int main(int argc, char **argv) {
     // Comprobamos los parámetros
