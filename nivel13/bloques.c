@@ -1,6 +1,10 @@
 #include "bloques.h"
 #include "semaforo_mutex_posix.h"
-
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 // Variable global para el descriptor del dispositivo
 static int descriptor = 0;
@@ -14,7 +18,7 @@ int bmount(const char *camino){
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
     if (descriptor == -1) {
-        perror("");
+        perror("Error en bmount");
         return FALLO;
     }
 
@@ -32,13 +36,12 @@ int bmount(const char *camino){
 int bumount() {
     int i = close(descriptor);
     if (i == -1) {
-        perror("");
+        perror("Error en bumount");
         return FALLO;
     }
 
-    // Eliminar el semáforo
-    deleteSem();
-    
+    deleteSem();    // Eliminar el semáforo
+    mutex = NULL;   // Evita punteros colgantes
 
     return EXITO;
 }
@@ -60,25 +63,26 @@ void mi_signalSem() {
 
 int bwrite(unsigned int nbloque, const void *buf) {
     if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1) {
-        perror("");
+        perror("Error en bwrite (lseek)");
         return FALLO;
     }
     ssize_t bytes_escritos = write(descriptor, buf, BLOCKSIZE);
     if (bytes_escritos == -1) {
-        perror("Error en write");
+        perror("Error en bwrite (write)");
         return FALLO;
     }
     return bytes_escritos;
 }
 
 int bread(unsigned int nbloque, void *buf) {
-    off_t desplazamiento = nbloque * BLOCKSIZE;
-    if (lseek(descriptor, desplazamiento, SEEK_SET) == -1) {
-        return FALLO; // Error lseek
+    if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1) {
+        perror("Error en bread (lseek)");
+        return FALLO;
     }
-    size_t nbytes = read(descriptor, buf, BLOCKSIZE);
+    ssize_t nbytes = read(descriptor, buf, BLOCKSIZE);
     if (nbytes == -1) {
-        return FALLO; // Error read
+        perror("Error en bread (read)");
+        return FALLO;
     }
     return nbytes;
 }
