@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
             for (int j = 0; j < NUMESCRITURAS; j++) {
                 reg.fecha = time(NULL);
                 reg.pid = getpid();
-                reg.nEscritura = j;
+                reg.nEscritura = j+1;
                 reg.nRegistro = rand() % REGMAX;
                 int resultado = mi_write(nombre_fichero, &reg, reg.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO));
                 if (resultado == -1) {
