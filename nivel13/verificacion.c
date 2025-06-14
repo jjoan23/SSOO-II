@@ -9,104 +9,99 @@
 #include "verificacion.h"
 
 #define REGISTROS_BUFFER 256
+#define MAX_POS 500000
 
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Uso: %s <disco> <directorio_simulacion>\n", argv[0]);
-        return FALLO;
-    }
+int main(int argc, char **argv) {
+	char *disco = argv[1];
+	char *dir_simul = argv[2];
+	if (argc != 3) {
+		fprintf(stderr,"Sintaxis: ./verificacion <disco> <directorio_simulacion>\n");
+		return -1;
+	}
 
-    if (bmount(argv[1]) < 0) {
-        perror("bmount");
-        return FALLO;
-    }
+	bmount(disco);
 
-    char *dir_sim = argv[2];
-    struct STAT stat;
-    if (mi_stat(dir_sim, &stat) < 0) {
-        fprintf(stderr, "Error al obtener stat de %s\n", dir_sim);
-        bumount();
-        return FALLO;
-    }
+	struct STAT stat;
+ 	if (mi_stat(dir_simul, &stat) == -1) { // Obtenemos la metainformacion del directorio de simulacion
+		printf("Error al obtener la metainformacion del directorio de simulacion\n");
+		return -1;
+	}
 
-    int numentradas = stat.tamEnBytesLog / sizeof(struct entrada);
-    printf("dir_sim: %s\n", dir_sim);
-    printf("numentradas: %d NUMPROCESOS: %d\n", numentradas, NUMPROCESOS);
+	
+	int numentradas = stat.tamEnBytesLog / sizeof(struct entrada);
+	struct entrada entradas[numentradas];
+	if (mi_read(dir_simul, entradas, 0, sizeof(entradas)) == -1) { // Leemos las entradas del directorio de simulación
+		printf("Error al leer las entradas del directorio de simulacion\n");
+		return -1;
+	}
 
-    if (numentradas != NUMPROCESOS) {
-        fprintf(stderr, "ERROR: numentradas != NUMPROCESOS\n");
-        bumount();
-        return FALLO;
-    }
+	char path_informe[128];
+	sprintf(path_informe, "%s%s", dir_simul, "informe.txt");
+	
+	if (mi_creat(path_informe, 7) == -1) {// Creamos el fichero de informe
+		printf("Error al crear el fichero informe\n");
+		return -1;
+	}
+	
+	int i, nbytes_informe = 0;
+	for (i = 0; i < numentradas; i++) {
+		pid_t pid = atoi(strchr(entradas[i].nombre, '_') + 1);
 
-    char path_informe[300];
-    sprintf(path_informe, "%sinforme.txt", dir_sim);
-    if (mi_creat(path_informe, 6) < 0) {
-        fprintf(stderr, "Error al crear informe.txt\n");
-        bumount();
-        return FALLO;
-    }
+		int num_escrituras = 0;
+		struct INFORMACION info;
+		char path_fichero[128];
+		sprintf(path_fichero, "%s%s/%s", dir_simul, entradas[i].nombre, "prueba.dat");
+		int offset = 0;
+		struct REGISTRO registros[(BLOCKSIZE/sizeof(struct REGISTRO))*200];
+		while (mi_read(path_fichero, registros, offset, sizeof(registros)) > 0) {
+			int j;
+			for (j = 0; j < (BLOCKSIZE/sizeof(struct REGISTRO))*200; j++) {
+				if (registros[j].pid == pid) {
+					if (num_escrituras == 0) {
+						info.PrimeraEscritura = registros[j];
+						info.UltimaEscritura = registros[j];
+						info.MenorPosicion = registros[j];
+						info.MayorPosicion = registros[j];
+					} else {
+						if(difftime(info.PrimeraEscritura.fecha, registros[j].fecha) > 0){
+                     info.PrimeraEscritura = registros[j];
+                  }else if((difftime(info.PrimeraEscritura.fecha, registros[j].fecha)  == 0)
+                           && registros[j].nEscritura < info.PrimeraEscritura.nEscritura ){
+                     info.PrimeraEscritura = registros[j];
+                  }else if(difftime(info.UltimaEscritura.fecha, registros[j].fecha) < 0){
+                     info.UltimaEscritura = registros[j];
+                  }else if ((difftime(info.UltimaEscritura.fecha, registros[j].fecha)  == 0)
+                           && registros[j].nEscritura > info.UltimaEscritura.nEscritura ){
+                     info.UltimaEscritura = registros[j];
+                  }
+					}
+					num_escrituras++;
+				}
+			}
+			memset(registros, 0, sizeof(registros));
+			offset += sizeof(registros);
+		}
+		
+		printf("%d escrituras validadas en %s\n", num_escrituras, path_fichero);
 
-    struct entrada entradas[NUMPROCESOS];
-    mi_read(dir_sim, entradas, 0, sizeof(entradas));
+		char buffer[BLOCKSIZE];
+		memset(buffer, 0, BLOCKSIZE);
+		sprintf(buffer, "PID: %i\nNumero de escrituras: %i\n",  pid, num_escrituras);
 
-    for (int i = 0; i < NUMPROCESOS; i++) {
-        struct INFORMACION info;
-        char *nombre = entradas[i].nombre;
-        char *guion = strchr(nombre, '_');
-        if (!guion) continue;
-        info.pid = atoi(guion + 1);
-        info.nEscrituras = 0;
+		sprintf(buffer + strlen(buffer), "%s %i %i %s","Primera escritura: ",info.PrimeraEscritura.nEscritura,info.PrimeraEscritura.nRegistro, asctime(localtime(&info.PrimeraEscritura.fecha)));
 
-        char path_fichero[300];
-        sprintf(path_fichero, "%s%s/prueba.dat", dir_sim, nombre);
+		sprintf(buffer + strlen(buffer), "%s %i %i %s","Ultima escritura: ",info.UltimaEscritura.nEscritura,info.UltimaEscritura.nRegistro,asctime(localtime(&info.UltimaEscritura.fecha)));
 
-        int offset = 0, leidos;
-        struct REGISTRO buffer[REGISTROS_BUFFER];
-        memset(buffer, 0, sizeof(buffer));
-        int primera = 1;
+		sprintf(buffer + strlen(buffer), "%s %i %i %s","Menor posicion: ",info.MenorPosicion.nEscritura,info.MenorPosicion.nRegistro,asctime(localtime(&info.MenorPosicion.fecha)));
 
-        while ((leidos = mi_read(path_fichero, buffer, offset, sizeof(buffer))) > 0) {
-            int nregs = leidos / sizeof(struct REGISTRO);
-            for (int j = 0; j < nregs; j++) {
-                if (buffer[j].pid == info.pid) {
-                    if (primera) {
-                        info.PrimeraEscritura = buffer[j];
-                        info.UltimaEscritura = buffer[j];
-                        info.MenorPosicion = buffer[j];
-                        info.MayorPosicion = buffer[j];
-                        primera = 0;
-                    } else {
-                        if (buffer[j].nEscritura < info.PrimeraEscritura.nEscritura) info.PrimeraEscritura = buffer[j];
-                        if (buffer[j].nEscritura > info.UltimaEscritura.nEscritura) info.UltimaEscritura = buffer[j];
-                        if (buffer[j].nRegistro < info.MenorPosicion.nRegistro) info.MenorPosicion = buffer[j];
-                        if (buffer[j].nRegistro > info.MayorPosicion.nRegistro) info.MayorPosicion = buffer[j];
-                    }
-                    info.nEscrituras++;
-                }
-            }
-            offset += leidos;
-        }
+		sprintf(buffer + strlen(buffer), "%s %i %i %s %s","Mayor posicion: ",info.MayorPosicion.nEscritura,info.MayorPosicion.nRegistro,asctime(localtime(&info.MayorPosicion.fecha)),"\n");
 
-        char salida[1024];
-        sprintf(salida,
-            "\nPID: %d\nNumero de escrituras: %d\n"
-            "Primera Escritura\t%u\t%u\t%s"
-            "Ultima Escritura\t%u\t%u\t%s"
-            "Menor Posicion\t%u\t%u\t%s"
-            "Mayor Posicion\t%u\t%u\t%s\n",
-            info.pid, info.nEscrituras,
-            info.PrimeraEscritura.nEscritura, info.PrimeraEscritura.nRegistro, asctime(localtime(&info.PrimeraEscritura.fecha)),
-            info.UltimaEscritura.nEscritura, info.UltimaEscritura.nRegistro, asctime(localtime(&info.UltimaEscritura.fecha)),
-            info.MenorPosicion.nEscritura, info.MenorPosicion.nRegistro, asctime(localtime(&info.MenorPosicion.fecha)),
-            info.MayorPosicion.nEscritura, info.MayorPosicion.nRegistro, asctime(localtime(&info.MayorPosicion.fecha))
-        );
+		if (mi_write(path_informe, buffer, nbytes_informe, strlen(buffer)) == -1) {
+			printf("Error al escribir en el informe\n");
+		}
+		nbytes_informe += strlen(buffer);
+	}
+	bmount(disco);
 
-        mi_write(path_informe, salida, strlen(salida), 0);
-
-        printf("[%d) %d escrituras validadas en %s]\n", i+1, info.nEscrituras, path_fichero);
-    }
-
-    bumount();
-    return EXITO;
+	return 0;
 }
