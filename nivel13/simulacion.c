@@ -1,7 +1,7 @@
 //AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
 //simulacion.c: Simulación de escritura concurrente en un sistema de archivos
 #define DEBUG12 0
-#define DEBUG120 1
+#define DEBUG12_1 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGCHLD, reaper);
     pid_t pid;
+    fprintf(stdout,"Directorio simulación: %s\n", nombre_dir);
     for (int i = 0; i < NUMPROCESOS; i++) {
         pid = fork();
 
@@ -99,7 +100,8 @@ int main(int argc, char *argv[]) {
             #endif
                 usleep(50000);
             }
-            #if DEBUG120
+
+            #if DEBUG12_1
               fprintf(stdout, GRAY"[Proceso %d: Completadas %d escrituras en %s]\n"RESET, i+1, NUMESCRITURAS, nombre_fichero);
             #endif
             if(bumount()==-1){

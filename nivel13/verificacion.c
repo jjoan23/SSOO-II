@@ -11,6 +11,7 @@
 
 #define BLOQUE_REG 256
 #define MAX_ENTRADAS 500000
+#define DEBUG13 1
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -33,15 +34,22 @@ int main(int argc, char *argv[]) {
     }
 
     int total = info.tamEnBytesLog / sizeof(struct entrada);
+    
     struct entrada lista[total];
+
 
     if (mi_read(directorio, lista, 0, sizeof(lista)) == -1) {
         fprintf(stderr, "Fallo al leer entradas del directorio\n");
         return FALLO;
     }
 
+    printf("dir_sim: %s\n", directorio);
+    printf("Nº de inodo: %d\n", lista[total].ninodo); 
+    printf("numentradas: %d NUMPROCESOS: %d\n", total, NUMPROCESOS);
+
     char informe[128];
     sprintf(informe, "%sinforme.txt", directorio);
+
 
     if (mi_creat(informe, 7) == -1) {
         fprintf(stderr, "No se pudo crear informe.txt\n");
@@ -93,9 +101,9 @@ int main(int argc, char *argv[]) {
             memset(bloque, 0, sizeof(bloque));
             desplazamiento += sizeof(bloque);
         }
-
-        printf("%d escrituras validadas en %s\n", contador, fichero);
-
+        #if DEBUG13
+            fprintf(stderr, GRAY "[%d) %d escrituras validadas en %s]\n"RESET,i+1, contador, fichero);
+        #endif
         char salida[BLOCKSIZE];
         memset(salida, 0, BLOCKSIZE);
 
@@ -128,7 +136,7 @@ int main(int argc, char *argv[]) {
 
         tm_info = localtime(&datos.MayorPosicion.fecha);
         strftime(fecha, sizeof(fecha), "%Y-%m-%d %H:%M:%S", tm_info);
-        sprintf(salida + strlen(salida), "Mayor posicion: %d %d %s\n",
+        sprintf(salida + strlen(salida), "Mayor posicion: %d %d %s\n\n",
                 datos.MayorPosicion.nEscritura,
                 datos.MayorPosicion.nRegistro,
                 fecha);
