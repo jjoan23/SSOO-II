@@ -13,8 +13,10 @@
 #define MAX_ENTRADAS 500000
 #define DEBUG13 1
 
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
+int main(int argc, char *argv[])
+{
+    if (argc != 3)
+    {
         fprintf(stderr, "Uso: %s <disco> <directorio_simulacion>\n", argv[0]);
         return FALLO;
     }
@@ -22,13 +24,15 @@ int main(int argc, char *argv[]) {
     char *disco = argv[1];
     char *directorio = argv[2];
 
-    if (bmount(disco) == -1) {
+    if (bmount(disco) == -1)
+    {
         fprintf(stderr, "Error montando disco\n");
         return FALLO;
     }
 
     struct STAT info;
-    if (mi_stat(directorio, &info) == -1) {
+    if (mi_stat(directorio, &info) == -1)
+    {
         fprintf(stderr, "No se pudo obtener información del directorio\n");
         return FALLO;
     }
@@ -36,7 +40,8 @@ int main(int argc, char *argv[]) {
     int total = info.tamEnBytesLog / sizeof(struct entrada);
     struct entrada lista[total];
 
-    if (mi_read(directorio, lista, 0, sizeof(lista)) == -1) {
+    if (mi_read(directorio, lista, 0, sizeof(lista)) == -1)
+    {
         fprintf(stderr, "Fallo al leer entradas del directorio\n");
         return FALLO;
     }
@@ -45,7 +50,8 @@ int main(int argc, char *argv[]) {
     unsigned int p_inodo = 0;
     unsigned int p_entrada = 0;
 
-    if (buscar_entrada(directorio, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) == FALLO) {
+    if (buscar_entrada(directorio, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) == FALLO)
+    {
         fprintf(stderr, "Error al buscar entrada del directorio\n");
         return FALLO;
     }
@@ -57,14 +63,16 @@ int main(int argc, char *argv[]) {
     char informe[128];
     sprintf(informe, "%sinforme.txt", directorio);
 
-    if (mi_creat(informe, 7) == -1) {
+    if (mi_creat(informe, 7) == -1)
+    {
         fprintf(stderr, "No se pudo crear informe.txt\n");
         return FALLO;
     }
 
     int bytes_escritos = 0;
 
-    for (int i = 0; i < total; i++) {
+    for (int i = 0; i < total; i++)
+    {
         pid_t pid = atoi(strchr(lista[i].nombre, '_') + 1);
 
         char fichero[128];
@@ -75,29 +83,39 @@ int main(int argc, char *argv[]) {
         int desplazamiento = 0;
         int contador = 0;
 
-        while (mi_read(fichero, bloque, desplazamiento, sizeof(bloque)) > 0) {
-            for (int j = 0; j < (BLOCKSIZE / sizeof(struct REGISTRO)) * 200; j++) {
-                if (bloque[j].pid == pid) {
-                    if (contador == 0) {
+        while (mi_read(fichero, bloque, desplazamiento, sizeof(bloque)) > 0)
+        {
+            for (int j = 0; j < (BLOCKSIZE / sizeof(struct REGISTRO)) * 200; j++)
+            {
+                if (bloque[j].pid == pid)
+                {
+                    if (contador == 0)
+                    {
                         datos.PrimeraEscritura = datos.UltimaEscritura = datos.MenorPosicion = datos.MayorPosicion = bloque[j];
-                    } else {
+                    }
+                    else
+                    {
                         if (difftime(datos.PrimeraEscritura.fecha, bloque[j].fecha) > 0 ||
                             (difftime(datos.PrimeraEscritura.fecha, bloque[j].fecha) == 0 &&
-                             bloque[j].nEscritura < datos.PrimeraEscritura.nEscritura)) {
+                             bloque[j].nEscritura < datos.PrimeraEscritura.nEscritura))
+                        {
                             datos.PrimeraEscritura = bloque[j];
                         }
 
                         if (difftime(datos.UltimaEscritura.fecha, bloque[j].fecha) < 0 ||
                             (difftime(datos.UltimaEscritura.fecha, bloque[j].fecha) == 0 &&
-                             bloque[j].nEscritura > datos.UltimaEscritura.nEscritura)) {
+                             bloque[j].nEscritura > datos.UltimaEscritura.nEscritura))
+                        {
                             datos.UltimaEscritura = bloque[j];
                         }
 
-                        if (bloque[j].nRegistro < datos.MenorPosicion.nRegistro) {
+                        if (bloque[j].nRegistro < datos.MenorPosicion.nRegistro)
+                        {
                             datos.MenorPosicion = bloque[j];
                         }
 
-                        if (bloque[j].nRegistro > datos.MayorPosicion.nRegistro) {
+                        if (bloque[j].nRegistro > datos.MayorPosicion.nRegistro)
+                        {
                             datos.MayorPosicion = bloque[j];
                         }
                     }
@@ -108,9 +126,9 @@ int main(int argc, char *argv[]) {
             desplazamiento += sizeof(bloque);
         }
 
-        #if DEBUG13
-            fprintf(stderr, GRAY "[%d) %d escrituras validadas en %s]\n" RESET, i + 1, contador, fichero);
-        #endif
+#if DEBUG13
+        fprintf(stderr, GRAY "[%d) %d escrituras validadas en %s]\n" RESET, i + 1, contador, fichero);
+#endif
 
         char salida[BLOCKSIZE];
         memset(salida, 0, BLOCKSIZE);
@@ -149,7 +167,8 @@ int main(int argc, char *argv[]) {
                 datos.MayorPosicion.nRegistro,
                 fecha);
 
-        if (mi_write(informe, salida, bytes_escritos, strlen(salida)) == -1) {
+        if (mi_write(informe, salida, bytes_escritos, strlen(salida)) == -1)
+        {
             fprintf(stderr, "Error escribiendo en el informe\n");
         }
 

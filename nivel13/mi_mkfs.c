@@ -1,10 +1,11 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//mi_mkfs.c: Programa para crear un sistema de ficheros en un fichero dado
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// mi_mkfs.c: Programa para crear un sistema de ficheros en un fichero dado
 #include "directorios.h"
 
-
-int main(int argc, char **argv) {
-    if (argc != 3) {
+int main(int argc, char **argv)
+{
+    if (argc != 3)
+    {
         fprintf(stderr, "Usage: %s <nombre_fichero> <nbloques>\n", argv[0]);
         return FALLO;
     }
@@ -16,7 +17,8 @@ int main(int argc, char **argv) {
     unsigned int ninodos = nbloques / 4;
 
     // Crear el fichero
-    if (bmount(nombre_fichero) == FALLO) {
+    if (bmount(nombre_fichero) == FALLO)
+    {
         fprintf(stderr, "Error al montar el fichero\n");
         return FALLO;
     }
@@ -31,8 +33,9 @@ int main(int argc, char **argv) {
     initAI();
 
     // Crear el directorio raíz
-    //CREC QUE ES RESERVAR INODO ('f', 6) I NO RESERVAR INODO ('d', 7) esta malament mirar nivel 3 tipo crec que s'error es a un aaltra banda pero aixo ho arregla
-    if (reservar_inodo('f', 6) == FALLO) { // Cambiar 'd' a 'f' y 7 a 6
+    // CREC QUE ES RESERVAR INODO ('f', 6) I NO RESERVAR INODO ('d', 7) esta malament mirar nivel 3 tipo crec que s'error es a un aaltra banda pero aixo ho arregla
+    if (reservar_inodo('f', 6) == FALLO)
+    { // Cambiar 'd' a 'f' y 7 a 6
         fprintf(stderr, "Error al reservar el inodo para el directorio raíz\n");
         bumount();
         return FALLO;

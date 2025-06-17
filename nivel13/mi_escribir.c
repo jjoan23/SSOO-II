@@ -1,12 +1,14 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//mi_escribir.c: programa que escribe un texto en un fichero de un disco virtual
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// mi_escribir.c: programa que escribe un texto en un fichero de un disco virtual
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "directorios.h"
 
-int main(int argc, char **argv) {
-    if (argc != 5) {
+int main(int argc, char **argv)
+{
+    if (argc != 5)
+    {
         fprintf(stderr, "Sintaxis: %s <disco> </ruta_fichero> <texto> <offset>\n", argv[0]);
         return FALLO;
     }
@@ -19,20 +21,20 @@ int main(int argc, char **argv) {
     int escritos;
 
     printf("longitud texto: %d\n", nbytes);
-    
+
     char buffer[nbytes];
     strcpy(buffer, texto);
-    
-    bmount(nombre_disco);
-    
 
-    if ((escritos=mi_write(ruta_fichero, buffer, offset, nbytes))<0){
+    bmount(nombre_disco);
+
+    if ((escritos = mi_write(ruta_fichero, buffer, offset, nbytes)) < 0)
+    {
         return FALLO;
     }
 
-    printf("Bytes escritos: %d\n",escritos);
-    
+    printf("Bytes escritos: %d\n", escritos);
+
     bumount();
-    
+
     return EXITO;
 }

@@ -1,49 +1,59 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//mi_ls.c: programa que lista el contenido de un directorio o fichero en un sistema de ficheros simulado
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// mi_ls.c: programa que lista el contenido de un directorio o fichero en un sistema de ficheros simulado
 #include "directorios.h"
 
 #define TAMFILA 100
-#define TAMBUFFER (TAMFILA*1000) // máximo de 1000 entradas
+#define TAMBUFFER (TAMFILA * 1000) // máximo de 1000 entradas
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     char *disco, *ruta;
     int extended = 0;
     char buffer[TAMBUFFER]; // Buffer para almacenar el listado
 
     // Validar argumentos
-    if (argc < 3 || argc > 4) {
-        fprintf(stderr, RED"Sintaxis: ./mi_ls <disco> </ruta> o\n"RESET);
-        fprintf(stderr, RED"          ./mi_ls -l <disco> </ruta>\n"RESET);
+    if (argc < 3 || argc > 4)
+    {
+        fprintf(stderr, RED "Sintaxis: ./mi_ls <disco> </ruta> o\n" RESET);
+        fprintf(stderr, RED "          ./mi_ls -l <disco> </ruta>\n" RESET);
         return FALLO;
     }
 
     // Comprobar si se solicita formato extendido
-    if (strcmp(argv[1], "-l") == 0) {
-        if (argc != 4) {
-            fprintf(stderr, RED"Sintaxis con -l: ./mi_ls -l <disco> </ruta>\n"RESET);
+    if (strcmp(argv[1], "-l") == 0)
+    {
+        if (argc != 4)
+        {
+            fprintf(stderr, RED "Sintaxis con -l: ./mi_ls -l <disco> </ruta>\n" RESET);
             return FALLO;
         }
         extended = 1;
         disco = argv[2];
         ruta = argv[3];
-    } else {
+    }
+    else
+    {
         disco = argv[1];
         ruta = argv[2];
     }
 
     // Montar el dispositivo
-    if (bmount(disco) == -1) {
-        fprintf(stderr, RED"Error en bmount\n"RESET);
+    if (bmount(disco) == -1)
+    {
+        fprintf(stderr, RED "Error en bmount\n" RESET);
         return FALLO;
     }
 
     // Determinar si es fichero o directorio según la ruta
     char tipo;
-    if (strcmp(ruta, "/") == 0) {
+    if (strcmp(ruta, "/") == 0)
+    {
         // Caso especial: directorio raíz
         tipo = 'd';
-    } else {
-        tipo = (ruta[strlen(ruta)-1] == '/') ? 'd' : 'f';
+    }
+    else
+    {
+        tipo = (ruta[strlen(ruta) - 1] == '/') ? 'd' : 'f';
     }
 
     // Inicializar buffer
@@ -51,48 +61,53 @@ int main(int argc, char **argv) {
 
     // Consultar el tipo real usando mi_stat
     struct STAT stat;
-    if (mi_stat(ruta, &stat) < 0) {
+    if (mi_stat(ruta, &stat) < 0)
+    {
         bumount();
         return FALLO;
     }
     tipo = stat.tipo;
 
-  
-
     // Obtener listado
     int total = mi_dir(ruta, buffer, tipo, extended); // <-- Añadido el parámetro 'extended'
-    if (total < 0) {
-        fprintf(stderr, RED"Error al listar el directorio/fichero\n"RESET);
+    if (total < 0)
+    {
+        fprintf(stderr, RED "Error al listar el directorio/fichero\n" RESET);
         bumount();
         return FALLO;
     }
 
     // Mostrar resultados
-    if (tipo == 'd') {
-        if (total > 0) {
+    if (tipo == 'd')
+    {
+        if (total > 0)
+        {
             printf("Total: %d\n", total);
-            if (extended) {
+            if (extended)
+            {
                 printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
                 printf("--------------------------------------------------------------------------------------------\n");
             }
         }
-        else if (total == 0){
-                        printf("Total: %d\n", total);
+        else if (total == 0)
+        {
+            printf("Total: %d\n", total);
+        }
+    }
+    else
+    {
+        printf("Total: %d\n", total);
+        printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
 
-        }
-    } else{
-                printf("Total: %d\n", total);   
-                printf("Tipo\tModo\tmTime\t\t\tTamaño\tNombre\n");
-                
-                printf("--------------------------------------------------------------------------------------------\n");
-                
-            }
+        printf("--------------------------------------------------------------------------------------------\n");
+    }
 
     // Imprimir buffer
     printf("%s", buffer);
 
     // Desmontar dispositivo
-    if (bumount() == -1) {
+    if (bumount() == -1)
+    {
         fprintf(stderr, "Error en bumount\n");
         return FALLO;
     }

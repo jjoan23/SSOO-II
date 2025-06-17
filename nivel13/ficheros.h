@@ -1,13 +1,12 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//ficheros.h
-//Fichero de cabecera para el sistema de ficheros básico
-#include "ficheros_basico.h" 
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// ficheros.h
+// Fichero de cabecera para el sistema de ficheros básico
+#include "ficheros_basico.h"
 #include "bloques.h"
 
-
-
 // Definición de la estructura STAT (igual que struct inodo pero sin punteros)
-struct STAT {
+struct STAT
+{
     unsigned char tipo;
     unsigned char permisos;
     unsigned int nlinks;

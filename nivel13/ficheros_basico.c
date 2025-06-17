@@ -1,31 +1,36 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//fichero_basico.c: implementación de las funciones básicas del sistema de ficheros
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// fichero_basico.c: implementación de las funciones básicas del sistema de ficheros
 #include "ficheros_basico.h"
 
-#define DEBUG4 0 //Debug del nivel 4
-#define DEBUG5 0 //Debug del nivel 5
-#define DEBUG6 0 //Debug del nivel 6
+#define DEBUG4 0 // Debug del nivel 4
+#define DEBUG5 0 // Debug del nivel 5
+#define DEBUG6 0 // Debug del nivel 6
 
 // Calcula el tamaño en bloques del Mapa de Bits (MB) dado el número de bloques
-int tamMB(unsigned int nbloques) {
+int tamMB(unsigned int nbloques)
+{
     int tamMB = (nbloques / 8) / BLOCKSIZE;
-    if ((nbloques / 8) % BLOCKSIZE != 0) {
+    if ((nbloques / 8) % BLOCKSIZE != 0)
+    {
         tamMB++;
     }
     return tamMB;
 }
 
 // Calcula el tamaño en bloques del array de inodos (AI) dado el número de inodos
-int tamAI(unsigned int ninodos) {
+int tamAI(unsigned int ninodos)
+{
     int tamAI = (ninodos * INODOSIZE) / BLOCKSIZE;
-    if ((ninodos * INODOSIZE) % BLOCKSIZE != 0) {
+    if ((ninodos * INODOSIZE) % BLOCKSIZE != 0)
+    {
         tamAI++;
     }
     return tamAI;
 }
 
 // Inicializa el superbloque con la estructura del sistema de archivos
-int initSB(unsigned int nbloques, unsigned int ninodos) {
+int initSB(unsigned int nbloques, unsigned int ninodos)
+{
     struct superbloque SB;
 
     SB.posPrimerBloqueMB = 1;
@@ -46,31 +51,38 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
 }
 
 // Inicializa el Mapa de Bits a cero y marca como ocupados los bloques del sistema
-int initMB() {
+int initMB()
+{
     struct superbloque sb;
     unsigned char buff[BLOCKSIZE];
+    if (bread(posSB, &sb) != FALLO)
+    {
+        memset(buff, 0, BLOCKSIZE);
 
-    if (bread(posSB, &sb)==-1) {
-        fprintf(stderr, "initMB()-->Error de lectura del superbloque\n");
-        return FALLO;
-    }
+        for (int i = sb.posPrimerBloqueMB; i <= sb.posUltimoBloqueMB + 1; i++)
+        {
+            if (bwrite(i, buff) == FALLO)
+            {
+                fprintf(stderr, "initMB()-->Error de escritura en el mapa de bits");
+                return FALLO;
+            }
+        }
 
-    memset(buff, 0, BLOCKSIZE);
+        for (int i = posSB; i <= sb.posUltimoBloqueAI; i++)
+        {
+            escribir_bit(i, 1);
+            sb.cantBloquesLibres--;
+        }
 
-    for(int i = sb.posPrimerBloqueMB; i <= sb.posUltimoBloqueMB + 1; i++) {
-        if(bwrite(i, buff)==-1) {
-            fprintf(stderr, "initMB()-->Error de escritura en el mapa de bits");
+        if (bwrite(posSB, &sb) == FALLO)
+        {
+            fprintf(stderr, "initMB()-->ERROR, no se ha podido escribir el superbloque \n");
             return FALLO;
         }
     }
-
-    for (int i = posSB; i <= sb.posUltimoBloqueAI; i++) {
-        escribir_bit(i, 1);
-        sb.cantBloquesLibres--;
-    }
-
-    if(bwrite(posSB, &sb) == -1) {
-        fprintf(stderr, "initMB()-->ERROR, no se ha podido escribir el superbloque \n");
+    else
+    {
+        fprintf(stderr, "initMB()-->Error de lectura del superbloque\n");
         return FALLO;
     }
 
@@ -78,23 +90,29 @@ int initMB() {
 }
 
 // Inicializa el array de inodos enlazándolos como libres
-int initAI() {
+int initAI()
+{
     struct superbloque SB;
     bread(0, &SB);
 
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
     unsigned int contInodos = SB.posPrimerInodoLibre + 1;
 
-    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
+    for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++)
+    {
         bread(i, inodos);
 
-        for (int j = 0; j < BLOCKSIZE / INODOSIZE; j++) {
+        for (int j = 0; j < BLOCKSIZE / INODOSIZE; j++)
+        {
             inodos[j].tipo = 'l';
 
-            if (contInodos < SB.totInodos) {
+            if (contInodos < SB.totInodos)
+            {
                 inodos[j].punterosDirectos[0] = contInodos;
                 contInodos++;
-            } else {
+            }
+            else
+            {
                 inodos[j].punterosDirectos[0] = UINT_MAX;
                 break;
             }
@@ -106,11 +124,12 @@ int initAI() {
     return EXITO;
 }
 
-
 // Marca un bit en el mapa de bits como 0 (libre) o 1 (ocupado)
-int escribir_bit(unsigned int nbloque, unsigned int bit) {
+int escribir_bit(unsigned int nbloque, unsigned int bit)
+{
     struct superbloque SB;
-    if (bread(0, &SB) == -1) {
+    if (bread(0, &SB) == -1)
+    {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
@@ -121,7 +140,8 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
 
     unsigned char bufferMB[BLOCKSIZE];
-    if (bread(nbloqueabs, bufferMB) == -1) {
+    if (bread(nbloqueabs, bufferMB) == -1)
+    {
         perror("Error leyendo el mapa de bits");
         return FALLO;
     }
@@ -129,13 +149,17 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     posbyte %= BLOCKSIZE;
     unsigned char mascara = 128 >> posbit;
 
-    if (bit == 1) {
+    if (bit == 1)
+    {
         bufferMB[posbyte] |= mascara;
-    } else {
+    }
+    else
+    {
         bufferMB[posbyte] &= ~mascara;
     }
 
-    if (bwrite(nbloqueabs, bufferMB) == -1) {
+    if (bwrite(nbloqueabs, bufferMB) == -1)
+    {
         perror("Error escribiendo en el mapa de bits");
         return FALLO;
     }
@@ -144,9 +168,11 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
 }
 
 // Devuelve el estado del bit (0 libre, 1 ocupado) de un bloque en el mapa de bits
-char leer_bit(unsigned int nbloque) {
+char leer_bit(unsigned int nbloque)
+{
     struct superbloque SB;
-    if (bread(0, &SB) == -1) {
+    if (bread(0, &SB) == -1)
+    {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
@@ -157,7 +183,8 @@ char leer_bit(unsigned int nbloque) {
     unsigned int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
 
     unsigned char bufferMB[BLOCKSIZE];
-    if (bread(nbloqueabs, bufferMB) == -1) {
+    if (bread(nbloqueabs, bufferMB) == -1)
+    {
         perror("Error leyendo el mapa de bits");
         return FALLO;
     }
@@ -169,63 +196,75 @@ char leer_bit(unsigned int nbloque) {
 }
 
 // Busca el primer bloque libre, lo marca como ocupado y lo devuelve
-int reservar_bloque() {
+int reservar_bloque()
+{
     struct superbloque SB;
     unsigned char bufferMB[BLOCKSIZE];
     unsigned char bufferAux[BLOCKSIZE];
     memset(bufferAux, 255, BLOCKSIZE);
 
-    if (bread(0, &SB) == -1) {
+    if (bread(0, &SB) == -1)
+    {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
 
-    if (SB.cantBloquesLibres == 0) {
+    if (SB.cantBloquesLibres == 0)
+    {
         fprintf(stderr, "Error: No hay bloques libres disponibles\n");
         return FALLO;
     }
 
     int nbloqueMB;
-    for (nbloqueMB = 0; nbloqueMB < (SB.posUltimoBloqueMB - SB.posPrimerBloqueMB + 1); nbloqueMB++) {
-        if (bread(SB.posPrimerBloqueMB + nbloqueMB, bufferMB) == -1) {
+    for (nbloqueMB = 0; nbloqueMB < (SB.posUltimoBloqueMB - SB.posPrimerBloqueMB + 1); nbloqueMB++)
+    {
+        if (bread(SB.posPrimerBloqueMB + nbloqueMB, bufferMB) == -1)
+        {
             perror("Error leyendo el mapa de bits");
             return FALLO;
         }
-        if (memcmp(bufferMB, bufferAux, BLOCKSIZE) != 0) {
+        if (memcmp(bufferMB, bufferAux, BLOCKSIZE) != 0)
+        {
             break;
         }
     }
 
     int posbyte;
-    for (posbyte = 0; posbyte < BLOCKSIZE; posbyte++) {
-        if (bufferMB[posbyte] != 255) {
+    for (posbyte = 0; posbyte < BLOCKSIZE; posbyte++)
+    {
+        if (bufferMB[posbyte] != 255)
+        {
             break;
         }
     }
 
     int posbit = 0;
     unsigned char mascara = 128;
-    while (bufferMB[posbyte] & mascara) {
+    while (bufferMB[posbyte] & mascara)
+    {
         mascara >>= 1;
         posbit++;
     }
 
     int nbloque = (nbloqueMB * BLOCKSIZE * 8) + (posbyte * 8) + posbit;
 
-    if (escribir_bit(nbloque, 1) == -1) {
+    if (escribir_bit(nbloque, 1) == -1)
+    {
         perror("Error escribiendo bit en el mapa de bits");
         return FALLO;
     }
 
     SB.cantBloquesLibres--;
-    if (bwrite(0, &SB) == -1) {
+    if (bwrite(0, &SB) == -1)
+    {
         perror("Error actualizando el superbloque");
         return FALLO;
     }
 
     unsigned char bufferCero[BLOCKSIZE];
     memset(bufferCero, 0, BLOCKSIZE);
-    if (bwrite(SB.posPrimerBloqueDatos + nbloque, bufferCero) == -1) {
+    if (bwrite(SB.posPrimerBloqueDatos + nbloque, bufferCero) == -1)
+    {
         perror("Error limpiando el bloque de datos");
         return FALLO;
     }
@@ -234,26 +273,30 @@ int reservar_bloque() {
 }
 
 // Libera un bloque de datos y lo marca como libre en el mapa de bits
-int liberar_bloque(unsigned int nbloque) {
+int liberar_bloque(unsigned int nbloque)
+{
     struct superbloque SB;
 
     // Leer el superbloque
-    if (bread(0, &SB) == -1) {
+    if (bread(0, &SB) == -1)
+    {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
 
     // Marcar el bloque como libre en el mapa de bits
-    if (escribir_bit(nbloque, 0) == -1) {
+    if (escribir_bit(nbloque, 0) == -1)
+    {
         perror("Error escribiendo bit en el mapa de bits");
         return FALLO;
     }
 
     // Incrementar el contador de bloques libres en el superbloque
     SB.cantBloquesLibres++;
-    
+
     // Guardar el superbloque actualizado
-    if (bwrite(0, &SB) == -1) {
+    if (bwrite(0, &SB) == -1)
+    {
         perror("Error actualizando el superbloque");
         return FALLO;
     }
@@ -262,12 +305,14 @@ int liberar_bloque(unsigned int nbloque) {
 }
 
 // Escribe un inodo en el array de inodos
-int escribir_inodo(unsigned int ninodo, struct inodo *inodo) {
+int escribir_inodo(unsigned int ninodo, struct inodo *inodo)
+{
     struct superbloque SB;
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
 
     // Leer el superbloque
-    if (bread(0, &SB) == -1) {
+    if (bread(0, &SB) == -1)
+    {
         perror("Error leyendo el superbloque");
         return FALLO;
     }
@@ -277,7 +322,8 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo) {
     unsigned int nbloqueabs = SB.posPrimerBloqueAI + nbloqueAI;
 
     // Leer el bloque que contiene el inodo
-    if (bread(nbloqueabs, inodos) == -1) {
+    if (bread(nbloqueabs, inodos) == -1)
+    {
         perror("Error leyendo el bloque del array de inodos");
         return FALLO;
     }
@@ -287,7 +333,8 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo) {
     inodos[posinodo] = *inodo;
 
     // Escribir el bloque modificado en el dispositivo
-    if (bwrite(nbloqueabs, inodos) == -1) {
+    if (bwrite(nbloqueabs, inodos) == -1)
+    {
         perror("Error escribiendo el bloque del array de inodos");
         return FALLO;
     }
@@ -295,20 +342,21 @@ int escribir_inodo(unsigned int ninodo, struct inodo *inodo) {
     return EXITO;
 }
 // Lee un inodo del array de inodos y lo almacena en la estructura proporcionada
-int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
+int leer_inodo(unsigned int ninodo, struct inodo *inodo)
+{
     struct superbloque SB;
     struct inodo inodos[BLOCKSIZE / INODOSIZE];
 
-    
-    if (bread(posSB, &SB) == FALLO) {
+    if (bread(posSB, &SB) == FALLO)
+    {
         return FALLO;
     }
 
-    
     unsigned int nbloque = ninodo / (BLOCKSIZE / INODOSIZE);
     unsigned int pos_inodo = ninodo % (BLOCKSIZE / INODOSIZE);
 
-    if (bread(SB.posPrimerBloqueAI + nbloque, inodos) == FALLO) {
+    if (bread(SB.posPrimerBloqueAI + nbloque, inodos) == FALLO)
+    {
         return FALLO;
     }
 
@@ -318,69 +366,86 @@ int leer_inodo(unsigned int ninodo, struct inodo *inodo) {
 }
 
 // Reserva un inodo libre y lo inicializa con los parámetros proporcionados
-int reservar_inodo(unsigned char tipo, unsigned char permisos){
+int reservar_inodo(unsigned char tipo, unsigned char permisos)
+{
     struct superbloque sb;
     int posInodoReservado;
     struct inodo inodoReserva;
-    
-   if (bread(posSB, &sb)<0){
-       fprintf(stderr, "reservar_inodo()-->ERROR DE LECTURA DEL SUPERBLOQUE");
-       return FALLO;
-   }
-   if(sb.cantInodosLibres==0){
-       fprintf(stderr, "reservar_inodo()-->NO HAY INODOS LIBRES");
-       return FALLO;
-   }
-   posInodoReservado=sb.posPrimerInodoLibre;
-   sb.posPrimerInodoLibre = sb.posPrimerInodoLibre+1;
-    
-   inodoReserva.tipo=tipo;
-   inodoReserva.permisos=permisos;
-   inodoReserva.nlinks = 1;
-   inodoReserva.tamEnBytesLog=0;
-   inodoReserva.atime=time(NULL);
-   inodoReserva.ctime=time(NULL);
-   inodoReserva.mtime=time(NULL);
-   inodoReserva.btime=time(NULL);
-   inodoReserva.numBloquesOcupados=0;
-    
-   for(int i=0;i<3;i++){
-       inodoReserva.punterosIndirectos[i]=0;}
-   for(int i=0;i<DIRECTOS;i++){
-       inodoReserva.punterosDirectos[i]=0;}
-    
-   if(escribir_inodo(posInodoReservado, &inodoReserva)<0){
-       fprintf(stderr, "reservar_inodo()-->Error de escritura en el inodo");
-       return FALLO;
-   }
-   
-   sb.cantInodosLibres--;
-   if (bwrite(posSB, &sb)==-1){
-       fprintf(stderr, "reservar_inodo()-->Error de escritura en el superbloque");
-       return FALLO;
-   }
-    
-   return posInodoReservado;
-   
 
+    if (bread(posSB, &sb) < 0)
+    {
+        fprintf(stderr, "reservar_inodo()-->ERROR DE LECTURA DEL SUPERBLOQUE");
+        return FALLO;
+    }
+    if (sb.cantInodosLibres == 0)
+    {
+        fprintf(stderr, "reservar_inodo()-->NO HAY INODOS LIBRES");
+        return FALLO;
+    }
+    posInodoReservado = sb.posPrimerInodoLibre;
+    sb.posPrimerInodoLibre = sb.posPrimerInodoLibre + 1;
+
+    inodoReserva.tipo = tipo;
+    inodoReserva.permisos = permisos;
+    inodoReserva.nlinks = 1;
+    inodoReserva.tamEnBytesLog = 0;
+    inodoReserva.atime = time(NULL);
+    inodoReserva.ctime = time(NULL);
+    inodoReserva.mtime = time(NULL);
+    inodoReserva.btime = time(NULL);
+    inodoReserva.numBloquesOcupados = 0;
+
+    for (int i = 0; i < 3; i++)
+    {
+        inodoReserva.punterosIndirectos[i] = 0;
+    }
+    for (int i = 0; i < DIRECTOS; i++)
+    {
+        inodoReserva.punterosDirectos[i] = 0;
+    }
+
+    if (escribir_inodo(posInodoReservado, &inodoReserva) < 0)
+    {
+        fprintf(stderr, "reservar_inodo()-->Error de escritura en el inodo");
+        return FALLO;
+    }
+
+    sb.cantInodosLibres--;
+    if (bwrite(posSB, &sb) == -1)
+    {
+        fprintf(stderr, "reservar_inodo()-->Error de escritura en el superbloque");
+        return FALLO;
+    }
+
+    return posInodoReservado;
 }
 
 // Obtiene el rango de bloques lógicos (nRangoBL) y el puntero correspondiente (ptr) para un bloque lógico dado
-int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr) {
-    if (nblogico < DIRECTOS) { 
+int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *ptr)
+{
+    if (nblogico < DIRECTOS)
+    {
         *ptr = inodo->punterosDirectos[nblogico];
         return EXITO;
-    } else if (nblogico < INDIRECTOS0) {  
+    }
+    else if (nblogico < INDIRECTOS0)
+    {
         *ptr = inodo->punterosIndirectos[0];
         return 1;
-    } else if (nblogico < INDIRECTOS1) {
+    }
+    else if (nblogico < INDIRECTOS1)
+    {
         *ptr = inodo->punterosIndirectos[1];
         return 2;
-    } else if (nblogico < INDIRECTOS2) {
+    }
+    else if (nblogico < INDIRECTOS2)
+    {
         // This is the critical change - properly get the level 3 indirect pointer
         *ptr = inodo->punterosIndirectos[2];
         return 3;
-    } else {
+    }
+    else
+    {
         *ptr = 0;
         fprintf(stderr, "Error: Bloque lógico fuera de rango\n");
         return FALLO;
@@ -388,23 +453,39 @@ int obtener_nRangoBL(struct inodo *inodo, unsigned int nblogico, unsigned int *p
 }
 
 // Obtiene el índice del bloque lógico dentro de un nivel de punteros dado
-int obtener_indice(unsigned int nblogico, int nivel_punteros) {
-    if (nblogico < DIRECTOS) {
+int obtener_indice(unsigned int nblogico, int nivel_punteros)
+{
+    if (nblogico < DIRECTOS)
+    {
         return nblogico; // Bloques directos
-    } else if (nblogico < INDIRECTOS0) {
+    }
+    else if (nblogico < INDIRECTOS0)
+    {
         return nblogico - DIRECTOS; // Bloques indirectos de nivel 0
-    } else if (nblogico < INDIRECTOS1) { // Bloques indirectos de nivel 1
-        if (nivel_punteros == 2) {
+    }
+    else if (nblogico < INDIRECTOS1)
+    { // Bloques indirectos de nivel 1
+        if (nivel_punteros == 2)
+        {
             return (nblogico - INDIRECTOS0) / NPUNTEROS;
-        } else if (nivel_punteros == 1) {
+        }
+        else if (nivel_punteros == 1)
+        {
             return (nblogico - INDIRECTOS0) % NPUNTEROS;
         }
-    } else if (nblogico < INDIRECTOS2) { // Bloques indirectos de nivel 2
-        if (nivel_punteros == 3) {
+    }
+    else if (nblogico < INDIRECTOS2)
+    { // Bloques indirectos de nivel 2
+        if (nivel_punteros == 3)
+        {
             return (nblogico - INDIRECTOS1) / (NPUNTEROS * NPUNTEROS);
-        } else if (nivel_punteros == 2) {
+        }
+        else if (nivel_punteros == 2)
+        {
             return ((nblogico - INDIRECTOS1) / NPUNTEROS) % NPUNTEROS;
-        } else if (nivel_punteros == 1) {
+        }
+        else if (nivel_punteros == 1)
+        {
             return (nblogico - INDIRECTOS1) % NPUNTEROS;
         }
     }
@@ -413,176 +494,204 @@ int obtener_indice(unsigned int nblogico, int nivel_punteros) {
 }
 
 // Traduce un bloque lógico a un bloque físico, reservando bloques si es necesario
-int traducir_bloque_inodo(unsigned int ninodo,unsigned int nblogico, unsigned char reservar) {
+int traducir_bloque_inodo(unsigned int ninodo, unsigned int nblogico, unsigned char reservar)
+{
     // Declaraciones
-     struct inodo inode;
-     unsigned int ptr, ptr_ant, salvar_inodo, nRangoBL, nivel_punteros, indice;
-     int buffer[NPUNTEROS];  
+    struct inodo inode;
+    unsigned int ptr, ptr_ant, salvar_inodo, nRangoBL, nivel_punteros, indice;
+    int buffer[NPUNTEROS];
     // fin declaraciones
-    if (leer_inodo(ninodo, &inode)<0){
-     fprintf(stderr, "traducir_bloque_inodo()-->Error al leer el inodo\n");
-     return FALLO;
-     }
-    ptr = 0; ptr_ant = 0; salvar_inodo = 0;
-    nRangoBL = obtener_nRangoBL(&inode, nblogico, &ptr); //0:D, 1:I0, 2:I1, 3:I2
-    nivel_punteros = nRangoBL; //el nivel_punteros +alto es el que cuelga del inodo
-    while (nivel_punteros>0) { //iterar para cada nivel de indirectos
-         if (ptr==0) { //no cuelgan bloques de punteros
-             if (reservar==0) {
-               
-                 return FALLO;
-             }
-             else { //reservar bloques punteros y crear enlaces desde inodo hasta datos
-                 salvar_inodo = 1;
-                 ptr = reservar_bloque(); //de punteros          
-                 inode.numBloquesOcupados++;
-                 inode.ctime = time(NULL); //fecha actual
-                 if (nivel_punteros == nRangoBL) { 
-                     //el bloque cuelga directamente del inodo
-                     inode.punterosIndirectos[nRangoBL-1] = ptr; // (imprimirlo)
-                        #if DEBUG4
-                            fprintf(stderr, GRAY"traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n"RESET,nRangoBL-1,inode.punterosIndirectos[nRangoBL-1],inode.punterosIndirectos[nRangoBL-1],nivel_punteros);
-                        #endif
-                     //fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n",nRangoBL-1,inode.punterosIndirectos[nRangoBL-1],inode.punterosIndirectos[nRangoBL-1],nivel_punteros);
-                 }
-                 else {   //el bloque cuelga de otro bloque de punteros
-                     buffer[indice] = ptr; // (imprimirlo)
-                     #if DEBUG4
-                        fprintf(stderr, GRAY"traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n"RESET,nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
-                     #endif
-                        //fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n",nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
-                     bwrite(ptr_ant, buffer);
-                 }
-             }
-         }                
-     bread(ptr, buffer);
-     indice = obtener_indice(nblogico, nivel_punteros);
-     ptr_ant = ptr; //guardamos el puntero
-     ptr = buffer[indice] ;// y lo desplazamos al siguiente nivel
-     nivel_punteros--;
-    }   //al salir de este bucle ya estamos al nivel de datos
-    
-    if (ptr==0 ){//no existe bloque de datos 
-       if (reservar==0) {
-        return FALLO ; //error lectura ∄ bloque  
-       }  
-       else{
-          salvar_inodo = 1;
-          ptr = reservar_bloque(); //de datos
-          inode.numBloquesOcupados++;
-          inode.ctime = time(NULL);
-          if (nRangoBL==0 ){
-             inode.punterosDirectos[nblogico] = ptr ;
-             #if DEBUG4
-                fprintf(stderr, GRAY"traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n"RESET,nblogico,inode.punterosDirectos[nblogico],inode.punterosDirectos[nblogico], nblogico);
-             #endif
-             //fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n",nblogico,inode.punterosDirectos[nblogico],inode.punterosDirectos[nblogico], nblogico);
-             }// (imprimirlo)
-          else{
-             buffer[indice] = ptr; // (imprimirlo)
-            #if DEBUG4
-                fprintf(stderr, GRAY"traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n"RESET,indice,buffer[indice],buffer[indice],nblogico);
-             #endif
-             //fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n",indice,buffer[indice],buffer[indice],nblogico);
-             bwrite(ptr_ant, buffer);
-          }
-       }
+    if (leer_inodo(ninodo, &inode) < 0)
+    {
+        fprintf(stderr, "traducir_bloque_inodo()-->Error al leer el inodo\n");
+        return FALLO;
     }
-    if (salvar_inodo==1){
-       escribir_inodo(ninodo, &inode);  //sólo si lo hemos actualizado
+    ptr = 0;
+    ptr_ant = 0;
+    salvar_inodo = 0;
+    nRangoBL = obtener_nRangoBL(&inode, nblogico, &ptr); // 0:D, 1:I0, 2:I1, 3:I2
+    nivel_punteros = nRangoBL;                           // el nivel_punteros +alto es el que cuelga del inodo
+    while (nivel_punteros > 0)
+    { // iterar para cada nivel de indirectos
+        if (ptr == 0)
+        { // no cuelgan bloques de punteros
+            if (reservar == 0)
+            {
+
+                return FALLO;
+            }
+            else
+            { // reservar bloques punteros y crear enlaces desde inodo hasta datos
+                salvar_inodo = 1;
+                ptr = reservar_bloque(); // de punteros
+                inode.numBloquesOcupados++;
+                inode.ctime = time(NULL); // fecha actual
+                if (nivel_punteros == nRangoBL)
+                {
+                    // el bloque cuelga directamente del inodo
+                    inode.punterosIndirectos[nRangoBL - 1] = ptr; // (imprimirlo)
+#if DEBUG4
+                    fprintf(stderr, GRAY "traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n" RESET, nRangoBL - 1, inode.punterosIndirectos[nRangoBL - 1], inode.punterosIndirectos[nRangoBL - 1], nivel_punteros);
+#endif
+                    // fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosIndirectos[%d]=%d (reservado BF %d para punteros_nivel%d)\n",nRangoBL-1,inode.punterosIndirectos[nRangoBL-1],inode.punterosIndirectos[nRangoBL-1],nivel_punteros);
+                }
+                else
+                {                         // el bloque cuelga de otro bloque de punteros
+                    buffer[indice] = ptr; // (imprimirlo)
+#if DEBUG4
+                    fprintf(stderr, GRAY "traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n" RESET, nivel_punteros + 1, indice, buffer[indice], buffer[indice], nivel_punteros);
+#endif
+                    // fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel%d [%d]=%d (reservado BF %d para punteros_nivel%d)\n",nivel_punteros+1,indice,buffer[indice],buffer[indice],nivel_punteros);
+                    bwrite(ptr_ant, buffer);
+                }
+            }
+        }
+        bread(ptr, buffer);
+        indice = obtener_indice(nblogico, nivel_punteros);
+        ptr_ant = ptr;        // guardamos el puntero
+        ptr = buffer[indice]; // y lo desplazamos al siguiente nivel
+        nivel_punteros--;
+    } // al salir de este bucle ya estamos al nivel de datos
+
+    if (ptr == 0)
+    { // no existe bloque de datos
+        if (reservar == 0)
+        {
+            return FALLO; // error lectura ∄ bloque
+        }
+        else
+        {
+            salvar_inodo = 1;
+            ptr = reservar_bloque(); // de datos
+            inode.numBloquesOcupados++;
+            inode.ctime = time(NULL);
+            if (nRangoBL == 0)
+            {
+                inode.punterosDirectos[nblogico] = ptr;
+#if DEBUG4
+                fprintf(stderr, GRAY "traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n" RESET, nblogico, inode.punterosDirectos[nblogico], inode.punterosDirectos[nblogico], nblogico);
+#endif
+                // fprintf(stderr, "traducir_bloque_inodo()-->inodo.punterosDirectos[%d]=%d (reservado BF %d para BL=%d)\n",nblogico,inode.punterosDirectos[nblogico],inode.punterosDirectos[nblogico], nblogico);
+            } // (imprimirlo)
+            else
+            {
+                buffer[indice] = ptr; // (imprimirlo)
+#if DEBUG4
+                fprintf(stderr, GRAY "traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n" RESET, indice, buffer[indice], buffer[indice], nblogico);
+#endif
+                // fprintf(stderr, "traducir_bloque_inodo()-->punteros_nivel1 [%d]=%d (reservado BF %d para BL=%d)\n",indice,buffer[indice],buffer[indice],nblogico);
+                bwrite(ptr_ant, buffer);
+            }
+        }
+    }
+    if (salvar_inodo == 1)
+    {
+        escribir_inodo(ninodo, &inode); // sólo si lo hemos actualizado
     }
     return ptr;
- }
+}
 
- // Libera un inodo y todos los bloques asociados a él
-int liberar_inodo(unsigned int ninodo) {
+// Libera un inodo y todos los bloques asociados a él
+int liberar_inodo(unsigned int ninodo)
+{
 
-    //Leemos inodo
+    // Leemos inodo
     struct inodo inodo;
-    if(leer_inodo(ninodo, &inodo) == -1) {
+    if (leer_inodo(ninodo, &inodo) == -1)
+    {
         return FALLO;
     }
 
-    //Liberamos todos los bloques del inodo
+    // Liberamos todos los bloques del inodo
     int bloquesLiberados = liberar_bloques_inodo(0, &inodo);
     inodo.numBloquesOcupados -= bloquesLiberados;
 
-    //Marcamos el inodo como tipo libre y tamEnBytesLog=0
+    // Marcamos el inodo como tipo libre y tamEnBytesLog=0
     inodo.tipo = 'l';
     inodo.tamEnBytesLog = 0;
 
-    //Leemos superbloque
+    // Leemos superbloque
     struct superbloque SB;
-    if(bread(posSB, &SB) == -1) {
+    if (bread(posSB, &SB) == -1)
+    {
         return FALLO;
     }
 
-    //Incluimos el inodo que queremos liberar en la lista de inodos libres
+    // Incluimos el inodo que queremos liberar en la lista de inodos libres
     inodo.punterosDirectos[0] = SB.posPrimerInodoLibre;
     SB.posPrimerInodoLibre = ninodo;
 
-    //Incrementamos la cantidad de inodos libres
+    // Incrementamos la cantidad de inodos libres
     SB.cantInodosLibres++;
 
-    //Escribimos el inodo actualizado
-    if(escribir_inodo(ninodo, &inodo) == -1) {
+    // Escribimos el inodo actualizado
+    if (escribir_inodo(ninodo, &inodo) == -1)
+    {
         return FALLO;
     }
 
-    //Guardamos el superbloque
-    if(bwrite(posSB, &SB) == -1) {
+    // Guardamos el superbloque
+    if (bwrite(posSB, &SB) == -1)
+    {
         return FALLO;
     }
 
-
-    //Devolvemos el nº del inodo liberado
+    // Devolvemos el nº del inodo liberado
     return ninodo;
 }
 
 // Libera todos los bloques de datos asociados a un inodo, comenzando desde el primer bloque lógico
-int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
+int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo)
+{
 
-    //Declaraciones
+    // Declaraciones
     unsigned int nivel_punteros, indice, ptr = 0, nBL, ultimoBL;
     int nRangoBL;
-    unsigned int bloques_punteros[3][NPUNTEROS];  //array de bloques de punteros
-    unsigned char bufAux_punteros[BLOCKSIZE]; //para llenar de 0s y comparar
-    int ptr_nivel[3];  //punteros a bloques de punteros de cada nivel
-    int indices[3];  //indices de cada nivel
-    int liberados = 0;  // nº de bloques liberados
+    unsigned int bloques_punteros[3][NPUNTEROS]; // array de bloques de punteros
+    unsigned char bufAux_punteros[BLOCKSIZE];    // para llenar de 0s y comparar
+    int ptr_nivel[3];                            // punteros a bloques de punteros de cada nivel
+    int indices[3];                              // indices de cada nivel
+    int liberados = 0;                           // nº de bloques liberados
 
-    if(inodo->tamEnBytesLog == 0) { //el fichero está vacío
+    if (inodo->tamEnBytesLog == 0)
+    { // el fichero está vacío
         return EXITO;
     }
 
-    if((inodo->tamEnBytesLog % BLOCKSIZE) == 0) {
+    if ((inodo->tamEnBytesLog % BLOCKSIZE) == 0)
+    {
         ultimoBL = (inodo->tamEnBytesLog / BLOCKSIZE) - 1;
-
-    } else {
+    }
+    else
+    {
         ultimoBL = inodo->tamEnBytesLog / BLOCKSIZE;
     }
 
     memset(bufAux_punteros, 0, BLOCKSIZE);
 
-    #if DEBUG6
-        printf(LBLUE"[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n"RESET, primerBL, ultimoBL);
-    #endif
-    
-    for(nBL = primerBL; nBL <= ultimoBL; nBL++) {  //recorrido BLs
+#if DEBUG6
+    printf(LBLUE "[liberar_bloques_inodo()→ primerBL: %d, ultimoBL: %d]\n" RESET, primerBL, ultimoBL);
+#endif
 
-        nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr); //0:D, 1:I0, 2:I1, 3:I2
-        if(nRangoBL < 0) {
+    for (nBL = primerBL; nBL <= ultimoBL; nBL++)
+    { // recorrido BLs
+
+        nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr); // 0:D, 1:I0, 2:I1, 3:I2
+        if (nRangoBL < 0)
+        {
             return FALLO;
         }
-        nivel_punteros = nRangoBL; //el nivel_punteros +alto cuelga del inodo
+        nivel_punteros = nRangoBL; // el nivel_punteros +alto cuelga del inodo
 
-        while(ptr > 0 && nivel_punteros > 0) {  //cuelgan bloques de punteros
+        while (ptr > 0 && nivel_punteros > 0)
+        { // cuelgan bloques de punteros
 
             indice = obtener_indice(nBL, nivel_punteros);
-            if(indice == 0 || nBL == primerBL) {
-                //solo hay que leer del dispositivo si no está ya cargado previamente en un buffer    
+            if (indice == 0 || nBL == primerBL)
+            {
+                // solo hay que leer del dispositivo si no está ya cargado previamente en un buffer
                 bread(ptr, bloques_punteros[nivel_punteros - 1]);
-            }             
+            }
 
             ptr_nivel[nivel_punteros - 1] = ptr;
             indices[nivel_punteros - 1] = indice;
@@ -590,64 +699,74 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
             nivel_punteros--;
         }
 
-        if(ptr > 0) { //si existe bloque de datos
+        if (ptr > 0)
+        { // si existe bloque de datos
             liberar_bloque(ptr);
             liberados++;
 
-            if(nRangoBL == 0) { //es un puntero Directo
+            if (nRangoBL == 0)
+            { // es un puntero Directo
                 inodo->punterosDirectos[nBL] = 0;
 
-                #if DEBUG6
-                    printf(GRAY"[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n"RESET, ptr, nBL);
-                #endif
-
-            } else {
+#if DEBUG6
+                printf(GRAY "[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n" RESET, ptr, nBL);
+#endif
+            }
+            else
+            {
                 nivel_punteros = 1;
 
-                #if DEBUG6
-                    printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de datos para BL: %i]\n"RESET, ptr, nBL);
-                #endif
+#if DEBUG6
+                printf(GRAY "[liberar_bloques_inodo()→ liberado BF %i de datos para BL: %i]\n" RESET, ptr, nBL);
+#endif
 
-                while(nivel_punteros <= nRangoBL) {
+                while (nivel_punteros <= nRangoBL)
+                {
 
                     indice = indices[nivel_punteros - 1];
                     bloques_punteros[nivel_punteros - 1][indice] = 0;
-                    ptr = ptr_nivel [nivel_punteros - 1]; 
+                    ptr = ptr_nivel[nivel_punteros - 1];
 
-                    if(memcmp(bloques_punteros[nivel_punteros - 1], bufAux_punteros, BLOCKSIZE) == 0) {  
-                        //No cuelgan más bloques ocupados, hay que liberar el bloque de punteros
-                        if(liberar_bloque(ptr) == -1) {
+                    if (memcmp(bloques_punteros[nivel_punteros - 1], bufAux_punteros, BLOCKSIZE) == 0)
+                    {
+                        // No cuelgan más bloques ocupados, hay que liberar el bloque de punteros
+                        if (liberar_bloque(ptr) == -1)
+                        {
                             return FALLO;
                         }
                         liberados++;
 
-                        #if DEBUG6
-                            printf(GRAY"[liberar_bloques_inodo()→ liberado BF %i de punteros_nivel%i correspondiente al BL: %i]\n"RESET, ptr, nivel_punteros, nBL);
-                        #endif
+#if DEBUG6
+                        printf(GRAY "[liberar_bloques_inodo()→ liberado BF %i de punteros_nivel%i correspondiente al BL: %i]\n" RESET, ptr, nivel_punteros, nBL);
+#endif
 
-                        //Incluir mejora saltando los bloques que no sea necesario explorar al eliminar bloque de punteros
-                        if(nivel_punteros == nRangoBL) {
-                            inodo->punterosDirectos[nRangoBL -1] = 0;
+                        // Incluir mejora saltando los bloques que no sea necesario explorar al eliminar bloque de punteros
+                        if (nivel_punteros == nRangoBL)
+                        {
+                            inodo->punterosDirectos[nRangoBL - 1] = 0;
 
-                            switch(nRangoBL) {
-                                case 1:
-                                    nBL = INDIRECTOS0;
-                                    break;
-                                
-                                case 2:
-                                    nBL = INDIRECTOS1;
-                                    break;
+                            switch (nRangoBL)
+                            {
+                            case 1:
+                                nBL = INDIRECTOS0;
+                                break;
 
-                                case 3:
-                                    nBL = INDIRECTOS2;
-                                    break;
+                            case 2:
+                                nBL = INDIRECTOS1;
+                                break;
+
+                            case 3:
+                                nBL = INDIRECTOS2;
+                                break;
                             }
                         }
 
                         nivel_punteros++;
-                        
-                    } else {  //escribimos en el dispositivo el bloque de punteros modificado
-                        if(bwrite(ptr, bloques_punteros[nivel_punteros - 1]) == -1) {
+                    }
+                    else
+                    { // escribimos en el dispositivo el bloque de punteros modificado
+                        if (bwrite(ptr, bloques_punteros[nivel_punteros - 1]) == -1)
+                        {
                             return FALLO;
                         }
                         // hemos de salir del bucle ya que no será necesario liberar los bloques de niveles
@@ -659,9 +778,9 @@ int liberar_bloques_inodo(unsigned int primerBL, struct inodo *inodo) {
         }
     }
 
-    #if DEBUGGER6
-        printf("[liberar_bloques_inodo()→ total bloques liberados: %d]\n", liberados);
-    #endif
+#if DEBUGGER6
+    printf("[liberar_bloques_inodo()→ total bloques liberados: %d]\n", liberados);
+#endif
 
     return liberados;
 }

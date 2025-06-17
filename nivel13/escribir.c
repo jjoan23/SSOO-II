@@ -1,16 +1,18 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//escribir.c: Implementación de la función escribir que escribe un texto en diferentes offsets de un inodo en un sistema de ficheros simulado.
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// escribir.c: Implementación de la función escribir que escribe un texto en diferentes offsets de un inodo en un sistema de ficheros simulado.
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "ficheros.h" 
+#include "ficheros.h"
 
 #define NUM_OFFSETS 5
 
-int main(int argc, char **argv) {
-    if (argc != 4) {
+int main(int argc, char **argv)
+{
+    if (argc != 4)
+    {
         fprintf(stderr, RED "Uso: %s <nombre_dispositivo> <\"texto\"> <diferentes_inodos>\n" RESET, argv[0]);
         return FALLO;
     }
@@ -25,46 +27,50 @@ int main(int argc, char **argv) {
     memset(buf_original, 0, tam_texto);
 
     // Montar el dispositivo
-    if (bmount(nombre_dispositivo) < 0) {
+    if (bmount(nombre_dispositivo) < 0)
+    {
         perror("");
         return FALLO;
     }
 
     printf("longitud texto: %ld\n\n", strlen(argv[2]));
 
-    
     // Escritura en los offsets
-    for (int i = 0; i < NUM_OFFSETS; i++) {
-        if (diferentes_inodos || i == 0) {
+    for (int i = 0; i < NUM_OFFSETS; i++)
+    {
+        if (diferentes_inodos || i == 0)
+        {
             // Reservar un nuevo inodo si diferentes_inodos = 1 o si es el primer inodo
             ninodo = reservar_inodo('f', 6);
-            if (ninodo < 0) {
+            if (ninodo < 0)
+            {
                 perror("");
                 bumount();
                 return FALLO;
             }
-            
         }
         printf("Inodo reservado: %d\n", ninodo);
         // Escribir el texto en el offset correspondiente
         int escritos = mi_write_f(ninodo, texto, offsets[i], tam_texto);
-        if (escritos < 0) {
+        if (escritos < 0)
+        {
             perror("");
             bumount();
             return FALLO;
         }
 
-        //CANVIAR AIXO
+        // CANVIAR AIXO
         printf("Bytes escritos en el offset %d: %d\n", offsets[i], escritos);
 
         // Obtener información del inodo
         struct STAT stat;
-        if (mi_stat_f(ninodo, &stat) < 0) {
+        if (mi_stat_f(ninodo, &stat) < 0)
+        {
             perror("");
             bumount();
             return FALLO;
         }
-        
+
         printf("Tamaño lógico del inodo: %d bytes\n", stat.tamEnBytesLog);
         printf("Bloques ocupados: %d\n", stat.numBloquesOcupados);
         printf("\n");

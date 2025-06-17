@@ -1,12 +1,14 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//mi_stat.c: programa que muestra el estado de un fichero o directorio en un sistema de ficheros FUSE.
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// mi_stat.c: programa que muestra el estado de un fichero o directorio en un sistema de ficheros FUSE.
 #include "directorios.h"
 #include <time.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     // Validar argumentos
-    if (argc != 3) {
-        fprintf(stderr, RED"Sintaxis: ./mi_stat <disco> </ruta>\n"RESET);
+    if (argc != 3)
+    {
+        fprintf(stderr, RED "Sintaxis: ./mi_stat <disco> </ruta>\n" RESET);
         return FALLO;
     }
 
@@ -16,25 +18,31 @@ int main(int argc, char **argv) {
     int error;
 
     // Montar el dispositivo
-    if (bmount(disco) == -1) {
-        fprintf(stderr, RED"Error en bmount\n"RESET);
+    if (bmount(disco) == -1)
+    {
+        fprintf(stderr, RED "Error en bmount\n" RESET);
         return FALLO;
     }
 
     // Verificar si la ruta es válida
-    if (ruta[strlen(ruta) - 1] == '/' && strlen(ruta) > 1) {
+    if (ruta[strlen(ruta) - 1] == '/' && strlen(ruta) > 1)
+    {
         // Es un directorio
         error = mi_stat(ruta, &stat);
-        if (error < 0) {
-            fprintf(stderr, RED"Error: No existe el directorio %s\n"RESET, ruta);
+        if (error < 0)
+        {
+            fprintf(stderr, RED "Error: No existe el directorio %s\n" RESET, ruta);
             bumount();
             return FALLO;
         }
-    } else {
+    }
+    else
+    {
         // Es un fichero
         error = mi_stat(ruta, &stat);
-        if (error < 0) {
-            fprintf(stderr, RED"Error: No existe el fichero %s\n"RESET, ruta);
+        if (error < 0)
+        {
+            fprintf(stderr, RED "Error: No existe el fichero %s\n" RESET, ruta);
             bumount();
             return FALLO;
         }
@@ -53,11 +61,11 @@ int main(int argc, char **argv) {
     printf("numBloquesOcupados: %u\n", stat.numBloquesOcupados);
 
     // Desmontar dispositivo
-    if (bumount() == -1) {
-        fprintf(stderr, RED"Error en bumount\n"RESET);
+    if (bumount() == -1)
+    {
+        fprintf(stderr, RED "Error en bumount\n" RESET);
         return FALLO;
     }
 
     return EXITO;
 }
-

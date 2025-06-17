@@ -1,5 +1,5 @@
-//AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
-//bloques.c: Implementación de funciones para manejar bloques en un dispositivo
+// AUTORES: Joan Jiménez Rigo, Climent Alzamora Alcover, Marc Mateu Deyá
+// bloques.c: Implementación de funciones para manejar bloques en un dispositivo
 #include "bloques.h"
 #include "semaforo_mutex_posix.h"
 #include <fcntl.h>
@@ -15,19 +15,23 @@ static int descriptor = 0;
 static sem_t *mutex = NULL;
 static unsigned int inside_sc = 0;
 
-int bmount(const char *camino){
+int bmount(const char *camino)
+{
     umask(0000);
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
-    if (descriptor == -1) {
+    if (descriptor == -1)
+    {
         perror("Error en bmount");
         return FALLO;
     }
 
     // Inicializar el semáforo solo una vez
-    if (!mutex) {
+    if (!mutex)
+    {
         mutex = initSem();
-        if (mutex == SEM_FAILED) {
+        if (mutex == SEM_FAILED)
+        {
             return FALLO;
         }
     }
@@ -35,54 +39,66 @@ int bmount(const char *camino){
     return descriptor;
 }
 
-int bumount() {
+int bumount()
+{
     int i = close(descriptor);
-    if (i == -1) {
+    if (i == -1)
+    {
         perror("Error en bumount");
         return FALLO;
     }
 
-    deleteSem();    // Eliminar el semáforo
-    mutex = NULL;   // Evita punteros colgantes
+    deleteSem();  // Eliminar el semáforo
+    mutex = NULL; // Evita punteros colgantes
 
     return EXITO;
 }
 
 // Funciones para gestionar el semáforo de exclusión mutua
-void mi_waitSem() {
-    if (!inside_sc) {
+void mi_waitSem()
+{
+    if (!inside_sc)
+    {
         waitSem(mutex);
     }
     inside_sc++;
 }
 
-void mi_signalSem() {
+void mi_signalSem()
+{
     inside_sc--;
-    if (!inside_sc) {
+    if (!inside_sc)
+    {
         signalSem(mutex);
     }
 }
 
-int bwrite(unsigned int nbloque, const void *buf) {
-    if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1) {
+int bwrite(unsigned int nbloque, const void *buf)
+{
+    if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1)
+    {
         perror("Error en bwrite (lseek)");
         return FALLO;
     }
     ssize_t bytes_escritos = write(descriptor, buf, BLOCKSIZE);
-    if (bytes_escritos == -1) {
+    if (bytes_escritos == -1)
+    {
         perror("Error en bwrite (write)");
         return FALLO;
     }
     return bytes_escritos;
 }
 
-int bread(unsigned int nbloque, void *buf) {
-    if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1) {
+int bread(unsigned int nbloque, void *buf)
+{
+    if (lseek(descriptor, nbloque * BLOCKSIZE, SEEK_SET) == -1)
+    {
         perror("Error en bread (lseek)");
         return FALLO;
     }
     ssize_t nbytes = read(descriptor, buf, BLOCKSIZE);
-    if (nbytes == -1) {
+    if (nbytes == -1)
+    {
         perror("Error en bread (read)");
         return FALLO;
     }
