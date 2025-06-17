@@ -34,22 +34,28 @@ int main(int argc, char *argv[]) {
     }
 
     int total = info.tamEnBytesLog / sizeof(struct entrada);
-    
     struct entrada lista[total];
-
 
     if (mi_read(directorio, lista, 0, sizeof(lista)) == -1) {
         fprintf(stderr, "Fallo al leer entradas del directorio\n");
         return FALLO;
     }
 
+    unsigned int p_inodo_dir = 0;
+    unsigned int p_inodo = 0;
+    unsigned int p_entrada = 0;
+
+    if (buscar_entrada(directorio, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0) == FALLO) {
+        fprintf(stderr, "Error al buscar entrada del directorio\n");
+        return FALLO;
+    }
+
     printf("dir_sim: %s\n", directorio);
-    printf("Nº de inodo: %d\n", lista[total].ninodo); 
+    printf("Nº de inodo: %d\n", p_inodo);
     printf("numentradas: %d NUMPROCESOS: %d\n", total, NUMPROCESOS);
 
     char informe[128];
     sprintf(informe, "%sinforme.txt", directorio);
-
 
     if (mi_creat(informe, 7) == -1) {
         fprintf(stderr, "No se pudo crear informe.txt\n");
@@ -101,9 +107,11 @@ int main(int argc, char *argv[]) {
             memset(bloque, 0, sizeof(bloque));
             desplazamiento += sizeof(bloque);
         }
+
         #if DEBUG13
-            fprintf(stderr, GRAY "[%d) %d escrituras validadas en %s]\n"RESET,i+1, contador, fichero);
+            fprintf(stderr, GRAY "[%d) %d escrituras validadas en %s]\n" RESET, i + 1, contador, fichero);
         #endif
+
         char salida[BLOCKSIZE];
         memset(salida, 0, BLOCKSIZE);
 
